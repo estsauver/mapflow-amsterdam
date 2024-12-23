@@ -2,10 +2,28 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const AMSTERDAM_LOCATIONS = [
-  { name: 'City Center', coordinates: [4.9041, 52.3676], zoom: 14 },
-  { name: 'Vondelpark', coordinates: [4.8721, 52.3579], zoom: 15 },
-  { name: 'Museum Quarter', coordinates: [4.8852, 52.3600], zoom: 15 },
+type Location = {
+  name: string;
+  coordinates: [number, number]; // Explicitly typed as tuple
+  zoom: number;
+};
+
+const AMSTERDAM_LOCATIONS: Location[] = [
+  {
+    name: 'City Center',
+    coordinates: [4.9041, 52.3676],
+    zoom: 14
+  },
+  {
+    name: 'Vondelpark',
+    coordinates: [4.8721, 52.3579],
+    zoom: 15
+  },
+  {
+    name: 'Museum Quarter',
+    coordinates: [4.8852, 52.3600],
+    zoom: 15
+  }
 ];
 
 const AmsterdamMap = () => {
