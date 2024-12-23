@@ -28,87 +28,90 @@ const AMSTERDAM_LOCATIONS: Location[] = [
 
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('');
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken || mapInitialized) return;
 
-    // Cleanup any existing map instance
-    if (mapInstance.current) {
-      mapInstance.current.remove();
-      mapInstance.current = null;
-    }
+    let map: mapboxgl.Map | null = null;
+    let animationInterval: NodeJS.Timeout | null = null;
 
-    try {
-      mapboxgl.accessToken = mapboxToken;
-      
-      const map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: AMSTERDAM_LOCATIONS[0].coordinates,
-        zoom: AMSTERDAM_LOCATIONS[0].zoom,
-        pitch: 45,
-        bearing: -17.6,
-        antialias: true
-      });
-
-      mapInstance.current = map;
-
-      map.on('style.load', () => {
-        if (!map) return;
+    const initializeMap = () => {
+      try {
+        mapboxgl.accessToken = mapboxToken;
         
-        map.addLayer({
-          'id': '3d-buildings',
-          'source': 'composite',
-          'source-layer': 'building',
-          'filter': ['==', 'extrude', 'true'],
-          'type': 'fill-extrusion',
-          'minzoom': 12,
-          'paint': {
-            'fill-extrusion-color': '#aaa',
-            'fill-extrusion-height': ['get', 'height'],
-            'fill-extrusion-base': ['get', 'min_height'],
-            'fill-extrusion-opacity': 0.6
-          }
+        map = new mapboxgl.Map({
+          container: mapContainer.current!,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: AMSTERDAM_LOCATIONS[0].coordinates,
+          zoom: AMSTERDAM_LOCATIONS[0].zoom,
+          pitch: 45,
+          bearing: -17.6,
+          antialias: true
         });
 
-        map.setFog({
-          'color': 'rgb(255, 255, 255)',
-          'high-color': 'rgb(200, 200, 225)',
-          'horizon-blend': 0.2,
+        map.on('load', () => {
+          if (!map) return;
+          
+          map.addLayer({
+            'id': '3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 12,
+            'paint': {
+              'fill-extrusion-color': '#aaa',
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'min_height'],
+              'fill-extrusion-opacity': 0.6
+            }
+          });
+
+          map.setFog({
+            'color': 'rgb(255, 255, 255)',
+            'high-color': 'rgb(200, 200, 225)',
+            'horizon-blend': 0.2,
+          });
+
+          setMapInitialized(true);
         });
-      });
 
-      let currentLocationIndex = 0;
-      const animateLocation = () => {
-        if (!map) return;
-        
-        currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
-        const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
-        
-        map.easeTo({
-          center: nextLocation.coordinates,
-          zoom: nextLocation.zoom,
-          duration: 8000,
-          pitch: 45 + Math.random() * 10,
-          bearing: -17.6 + Math.random() * 40 - 20,
-        });
-      };
+        let currentLocationIndex = 0;
+        const animateLocation = () => {
+          if (!map) return;
+          
+          currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
+          const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
+          
+          map.easeTo({
+            center: nextLocation.coordinates,
+            zoom: nextLocation.zoom,
+            duration: 8000,
+            pitch: 45 + Math.random() * 10,
+            bearing: -17.6 + Math.random() * 40 - 20,
+          });
+        };
 
-      const interval = setInterval(animateLocation, 10000);
+        animationInterval = setInterval(animateLocation, 10000);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    };
 
-      return () => {
-        clearInterval(interval);
-        if (mapInstance.current) {
-          mapInstance.current.remove();
-          mapInstance.current = null;
-        }
-      };
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-  }, [mapboxToken]);
+    initializeMap();
+
+    return () => {
+      if (animationInterval) {
+        clearInterval(animationInterval);
+      }
+      if (map) {
+        map.remove();
+      }
+      setMapInitialized(false);
+    };
+  }, [mapboxToken, mapInitialized]);
 
   return (
     <div className="relative w-full h-screen">
