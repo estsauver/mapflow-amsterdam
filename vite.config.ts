@@ -19,4 +19,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['mapbox-gl'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/mapbox-gl/, /node_modules/],
+    },
+  },
 }));
