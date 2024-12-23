@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 type Location = {
   name: string;
-  coordinates: [number, number]; // Explicitly typed as tuple
+  coordinates: [number, number];
   zoom: number;
 };
 
@@ -28,74 +28,86 @@ const AMSTERDAM_LOCATIONS: Location[] = [
 
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('');
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: AMSTERDAM_LOCATIONS[0].coordinates,
-      zoom: AMSTERDAM_LOCATIONS[0].zoom,
-      pitch: 45,
-      bearing: -17.6,
-      antialias: true
-    });
+    // Cleanup any existing map instance
+    if (mapInstance.current) {
+      mapInstance.current.remove();
+      mapInstance.current = null;
+    }
 
-    map.current.on('style.load', () => {
-      if (!map.current) return;
+    try {
+      mapboxgl.accessToken = mapboxToken;
       
-      // Add 3D building layer
-      map.current.addLayer({
-        'id': '3d-buildings',
-        'source': 'composite',
-        'source-layer': 'building',
-        'filter': ['==', 'extrude', 'true'],
-        'type': 'fill-extrusion',
-        'minzoom': 12,
-        'paint': {
-          'fill-extrusion-color': '#aaa',
-          'fill-extrusion-height': ['get', 'height'],
-          'fill-extrusion-base': ['get', 'min_height'],
-          'fill-extrusion-opacity': 0.6
+      const map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: AMSTERDAM_LOCATIONS[0].coordinates,
+        zoom: AMSTERDAM_LOCATIONS[0].zoom,
+        pitch: 45,
+        bearing: -17.6,
+        antialias: true
+      });
+
+      mapInstance.current = map;
+
+      map.on('style.load', () => {
+        if (!map) return;
+        
+        map.addLayer({
+          'id': '3d-buildings',
+          'source': 'composite',
+          'source-layer': 'building',
+          'filter': ['==', 'extrude', 'true'],
+          'type': 'fill-extrusion',
+          'minzoom': 12,
+          'paint': {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': ['get', 'height'],
+            'fill-extrusion-base': ['get', 'min_height'],
+            'fill-extrusion-opacity': 0.6
+          }
+        });
+
+        map.setFog({
+          'color': 'rgb(255, 255, 255)',
+          'high-color': 'rgb(200, 200, 225)',
+          'horizon-blend': 0.2,
+        });
+      });
+
+      let currentLocationIndex = 0;
+      const animateLocation = () => {
+        if (!map) return;
+        
+        currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
+        const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
+        
+        map.easeTo({
+          center: nextLocation.coordinates,
+          zoom: nextLocation.zoom,
+          duration: 8000,
+          pitch: 45 + Math.random() * 10,
+          bearing: -17.6 + Math.random() * 40 - 20,
+        });
+      };
+
+      const interval = setInterval(animateLocation, 10000);
+
+      return () => {
+        clearInterval(interval);
+        if (mapInstance.current) {
+          mapInstance.current.remove();
+          mapInstance.current = null;
         }
-      });
-
-      // Add atmosphere effect
-      map.current.setFog({
-        'color': 'rgb(255, 255, 255)',
-        'high-color': 'rgb(200, 200, 225)',
-        'horizon-blend': 0.2,
-      });
-    });
-
-    // Animate between locations
-    let currentLocationIndex = 0;
-    const animateLocation = () => {
-      if (!map.current) return;
-      
-      currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
-      const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
-      
-      map.current.easeTo({
-        center: nextLocation.coordinates,
-        zoom: nextLocation.zoom,
-        duration: 8000,
-        pitch: 45 + Math.random() * 10,
-        bearing: -17.6 + Math.random() * 40 - 20,
-      });
-    };
-
-    const interval = setInterval(animateLocation, 10000);
-
-    return () => {
-      clearInterval(interval);
-      map.current?.remove();
-    };
+      };
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
   }, [mapboxToken]);
 
   return (
