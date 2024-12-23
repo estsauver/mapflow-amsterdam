@@ -29,10 +29,27 @@ const AMSTERDAM_LOCATIONS: Location[] = [
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [mapboxToken, setMapboxToken] = useState('');
+  const [windowLoaded, setWindowLoaded] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || mapInitialized) return;
+    const handleLoad = () => {
+      setWindowLoaded(true);
+    };
+
+    if (document.readyState === 'complete') {
+      setWindowLoaded(true);
+    } else {
+      window.addEventListener('load', handleLoad);
+    }
+
+    return () => {
+      window.removeEventListener('load', handleLoad);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken || !windowLoaded || mapInitialized) return;
 
     let map: mapboxgl.Map | null = null;
     let animationInterval: NodeJS.Timeout | null = null;
@@ -111,7 +128,7 @@ const AmsterdamMap = () => {
       }
       setMapInitialized(false);
     };
-  }, [mapboxToken, mapInitialized]);
+  }, [mapboxToken, windowLoaded, mapInitialized]);
 
   return (
     <div className="relative w-full h-screen">
