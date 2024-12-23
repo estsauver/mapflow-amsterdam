@@ -1,12 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from 'react';
+import AmsterdamMap from '../components/AmsterdamMap';
+import Navigation from '../components/Navigation';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="relative min-h-screen">
+      <AmsterdamMap />
+      <Navigation />
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-4">
+        <div className="glass-panel p-8 rounded-lg max-w-2xl w-full mx-auto animate-fade-in">
+          <span className="inline-block px-3 py-1 text-sm rounded-full bg-primary/10 text-primary-foreground mb-4">
+            Welcome
+          </span>
+          <h1 className="text-4xl font-bold mb-4 animate-slide-up">
+            Your Name
+          </h1>
+          <p className="text-lg text-muted-foreground animate-slide-up">
+            A brief introduction about yourself and what you do. This text will be replaced with your personal information.
+          </p>
+        </div>
+      </main>
     </div>
   );
 };
