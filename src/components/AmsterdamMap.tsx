@@ -38,7 +38,7 @@ const AmsterdamMap = () => {
     
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/estsauver/cm56kfvmt004q01podka2b1q9',
       center: AMSTERDAM_LOCATIONS[0].coordinates,
       zoom: AMSTERDAM_LOCATIONS[0].zoom,
       pitch: 45,
