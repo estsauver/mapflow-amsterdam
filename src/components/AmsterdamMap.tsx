@@ -85,14 +85,10 @@ const AmsterdamMap = () => {
       });
 
       flyToNextLocation()
-      // // Start the animation cycle after a short delay
-      // setTimeout(flyToNextLocation, 0);
     });
 
     mapInstance.current.on('moveend', () => {
       isAnimating.current = false;
-      // Schedule the next animation after a brief pause
-      // setTimeout(flyToNextLocation, 1000);
     });
 
     return () => {
@@ -111,7 +107,7 @@ const AmsterdamMap = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none" />
       <div className="absolute top-8 left-8 z-10">
         <div className="glass-panel rounded-lg p-4">
-          <h1 className="font-beth-ellen text-2xl text-foreground">
+          <h1 className="text-2xl text-foreground">
             Earl St Sauver
           </h1>
         </div>
