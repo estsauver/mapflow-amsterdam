@@ -75,15 +75,17 @@ const AmsterdamMap = () => {
         mapInstance.current.flyTo({
           center: nextLocation.coordinates,
           zoom: nextLocation.zoom,
-          speed: 0.2,
+          speed: 0.3,
           curve: 1,
+          essential: true,
+          duration: 8000,
           easing(t) {
             return t;
           }
         });
       };
 
-      animationInterval.current = setInterval(animateLocation, 10000);
+      animationInterval.current = setInterval(animateLocation, 12000);
     });
 
     return () => {
