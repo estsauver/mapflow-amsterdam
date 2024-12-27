@@ -75,9 +75,11 @@ const AmsterdamMap = () => {
         mapInstance.current.flyTo({
           center: nextLocation.coordinates,
           zoom: nextLocation.zoom,
-          duration: 8000,
-          pitch: 45 + Math.random() * 10,
-          bearing: -17.6 + Math.random() * 40 - 20,
+          speed: 0.2,
+          curve: 1,
+          easing(t) {
+            return t;
+          }
         });
       };
 
