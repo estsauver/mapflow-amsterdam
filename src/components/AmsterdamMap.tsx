@@ -8,21 +8,31 @@ type Location = {
   zoom: number;
 };
 
-const AMSTERDAM_LOCATIONS: Location[] = [
+const LOCATIONS: Location[] = [
   {
-    name: 'City Center',
+    name: 'Amsterdam City Center',
     coordinates: [4.9041, 52.3676],
     zoom: 14
   },
   {
-    name: 'Vondelpark',
-    coordinates: [4.8721, 52.3579],
-    zoom: 15
+    name: 'Apollo Agriculture Office',
+    coordinates: [4.890499, 52.365325],
+    zoom: 16
   },
   {
-    name: 'Museum Quarter',
-    coordinates: [4.8852, 52.3600],
-    zoom: 15
+    name: 'Nakuru',
+    coordinates: [36.04418101125058, -0.29486913332733633],
+    zoom: 12
+  },
+  {
+    name: 'Nairobi',
+    coordinates: [36.778706180168236, -1.2556971742421654],
+    zoom: 12
+  },
+  {
+    name: 'San Francisco',
+    coordinates: [-122.41082156831577, 37.778590255955436],
+    zoom: 16
   }
 ];
 
@@ -39,8 +49,8 @@ const AmsterdamMap = () => {
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/estsauver/cm56kfvmt004q01podka2b1q9',
-      center: AMSTERDAM_LOCATIONS[0].coordinates,
-      zoom: AMSTERDAM_LOCATIONS[0].zoom,
+      center: LOCATIONS[0].coordinates,
+      zoom: LOCATIONS[0].zoom,
       pitch: 45,
       bearing: -17.6,
       antialias: true
@@ -59,10 +69,10 @@ const AmsterdamMap = () => {
       const animateLocation = () => {
         if (!mapInstance.current) return;
         
-        currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
-        const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
+        currentLocationIndex = (currentLocationIndex + 1) % LOCATIONS.length;
+        const nextLocation = LOCATIONS[currentLocationIndex];
         
-        mapInstance.current.easeTo({
+        mapInstance.current.flyTo({
           center: nextLocation.coordinates,
           zoom: nextLocation.zoom,
           duration: 8000,
