@@ -68,7 +68,7 @@ const AmsterdamMap = () => {
         center: nextLocation.coordinates,
         zoom: nextLocation.zoom,
         curve: 1.42,
-        speed: 0.2,
+        speed: 0.05,
         easing(t) {
           return t;
         }
@@ -84,8 +84,9 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      // Start the animation cycle after a short delay
-      setTimeout(flyToNextLocation, 2000);
+      flytToNextLocation()
+      // // Start the animation cycle after a short delay
+      // setTimeout(flyToNextLocation, 0);
     });
 
     mapInstance.current.on('moveend', () => {
