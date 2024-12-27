@@ -20,6 +20,14 @@ const Navigation = () => {
           <ul className="space-y-2">
             <li>
               <button
+                onClick={() => setAboutOpen(true)}
+                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
+              >
+                About
+              </button>
+            </li>
+            <li>
+              <button
                 onClick={() => setProjectsOpen(true)}
                 className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
               >
@@ -32,14 +40,6 @@ const Navigation = () => {
                 className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
               >
                 Contact
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setAboutOpen(true)}
-                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                About
               </button>
             </li>
           </ul>
