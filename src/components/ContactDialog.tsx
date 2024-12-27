@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Twitter, Linkedin } from "lucide-react";
+import { Twitter, Linkedin, Mail } from "lucide-react";
 
 interface ContactDialogProps {
   open: boolean;
@@ -42,6 +42,10 @@ const ContactDialog = ({ open, onOpenChange }: ContactDialogProps) => {
                 <Linkedin className="h-5 w-5" />
                 LinkedIn Profile
               </a>
+              <div className="flex items-center gap-2 text-lg">
+                <Mail className="h-5 w-5" />
+                My email is my twitter handle at gmail dot com
+              </div>
             </div>
           </DialogDescription>
         </DialogHeader>
