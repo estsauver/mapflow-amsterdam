@@ -104,6 +104,13 @@ const AmsterdamMap = () => {
         <div ref={mapContainer} className="w-full h-full" />
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none" />
+      <div className="absolute top-8 left-8 z-10">
+        <div className="glass-panel rounded-lg p-4">
+          <h1 className="font-beth-ellen text-2xl text-foreground">
+            Earl St Sauver
+          </h1>
+        </div>
+      </div>
     </div>
   );
 };

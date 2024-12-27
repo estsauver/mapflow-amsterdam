@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Beth+Ellen&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -60,6 +60,10 @@
 
   .glass-panel {
     @apply backdrop-blur-md bg-white/30 border border-white/20 shadow-lg;
+  }
+
+  .font-beth-ellen {
+    font-family: 'Beth Ellen', cursive;
   }
 }
 
