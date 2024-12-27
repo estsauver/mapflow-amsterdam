@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -30,92 +30,64 @@ const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const animationInterval = useRef<NodeJS.Timeout | null>(null);
-  const [windowLoaded, setWindowLoaded] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
 
   useEffect(() => {
-    const handleLoad = () => {
-      setWindowLoaded(true);
-    };
+    if (!mapContainer.current || mapInstance.current) return;
 
-    if (document.readyState === 'complete') {
-      setWindowLoaded(true);
-    } else {
-      window.addEventListener('load', handleLoad);
-    }
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZXN0c2F1dmVyIiwiYSI6ImNtNTB4ODF1NzFoZjgyaHF3bWRwbXhzdDUifQ.8GwaYheqLbIJEb58x_-CLw';
+    
+    mapInstance.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: AMSTERDAM_LOCATIONS[0].coordinates,
+      zoom: AMSTERDAM_LOCATIONS[0].zoom,
+      pitch: 45,
+      bearing: -17.6,
+      antialias: true
+    });
 
-    return () => {
-      window.removeEventListener('load', handleLoad);
-    };
-  }, []);
+    mapInstance.current.on('load', () => {
+      if (!mapInstance.current) return;
+      
+      mapInstance.current.addLayer({
+        'id': '3d-buildings',
+        'source': 'composite',
+        'source-layer': 'building',
+        'filter': ['==', 'extrude', 'true'],
+        'type': 'fill-extrusion',
+        'minzoom': 12,
+        'paint': {
+          'fill-extrusion-color': '#aaa',
+          'fill-extrusion-height': ['get', 'height'],
+          'fill-extrusion-base': ['get', 'min_height'],
+          'fill-extrusion-opacity': 0.6
+        }
+      });
 
-  useEffect(() => {
-    if (!mapContainer.current || !windowLoaded || mapInitialized) return;
+      mapInstance.current.setFog({
+        'color': 'rgb(255, 255, 255)',
+        'high-color': 'rgb(200, 200, 225)',
+        'horizon-blend': 0.2,
+      });
 
-    const initializeMap = () => {
-      try {
-        mapboxgl.accessToken = 'pk.eyJ1IjoiZXN0c2F1dmVyIiwiYSI6ImNtNTB4ODF1NzFoZjgyaHF3bWRwbXhzdDUifQ.8GwaYheqLbIJEb58x_-CLw';
+      let currentLocationIndex = 0;
+      const animateLocation = () => {
+        if (!mapInstance.current) return;
         
-        mapInstance.current = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: AMSTERDAM_LOCATIONS[0].coordinates,
-          zoom: AMSTERDAM_LOCATIONS[0].zoom,
-          pitch: 45,
-          bearing: -17.6,
-          antialias: true
+        currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
+        const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
+        
+        mapInstance.current.easeTo({
+          center: nextLocation.coordinates,
+          zoom: nextLocation.zoom,
+          duration: 8000,
+          pitch: 45 + Math.random() * 10,
+          bearing: -17.6 + Math.random() * 40 - 20,
         });
+      };
 
-        mapInstance.current.on('load', () => {
-          if (!mapInstance.current) return;
-          
-          mapInstance.current.addLayer({
-            'id': '3d-buildings',
-            'source': 'composite',
-            'source-layer': 'building',
-            'filter': ['==', 'extrude', 'true'],
-            'type': 'fill-extrusion',
-            'minzoom': 12,
-            'paint': {
-              'fill-extrusion-color': '#aaa',
-              'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-base': ['get', 'min_height'],
-              'fill-extrusion-opacity': 0.6
-            }
-          });
-
-          mapInstance.current.setFog({
-            'color': 'rgb(255, 255, 255)',
-            'high-color': 'rgb(200, 200, 225)',
-            'horizon-blend': 0.2,
-          });
-
-          setMapInitialized(true);
-        });
-
-        let currentLocationIndex = 0;
-        const animateLocation = () => {
-          if (!mapInstance.current) return;
-          
-          currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
-          const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
-          
-          mapInstance.current.easeTo({
-            center: nextLocation.coordinates,
-            zoom: nextLocation.zoom,
-            duration: 8000,
-            pitch: 45 + Math.random() * 10,
-            bearing: -17.6 + Math.random() * 40 - 20,
-          });
-        };
-
-        animationInterval.current = setInterval(animateLocation, 10000);
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-
-    initializeMap();
+      animationInterval.current = setInterval(animateLocation, 10000);
+    });
 
     return () => {
       if (animationInterval.current) {
@@ -126,9 +98,8 @@ const AmsterdamMap = () => {
         mapInstance.current.remove();
         mapInstance.current = null;
       }
-      setMapInitialized(false);
     };
-  }, [windowLoaded, mapInitialized]);
+  }, []);
 
   return (
     <div className="relative w-full h-screen">
