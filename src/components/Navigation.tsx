@@ -12,7 +12,7 @@ const Navigation = () => {
     <>
       <nav className="fixed top-8 right-8 z-10">
         <div className="glass-panel rounded-lg p-4">
-          <div className="mb-4 pb-4 border-b border-white/20">
+          <div className="mb-4">
             <h1 className="text-2xl text-foreground">
               Earl St Sauver
             </h1>
