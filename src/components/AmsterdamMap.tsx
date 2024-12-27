@@ -67,7 +67,7 @@ const AmsterdamMap = () => {
       mapInstance.current.flyTo({
         center: nextLocation.coordinates,
         zoom: nextLocation.zoom,
-        curve: 1,
+        curve: 1.42,
         speed: 0.2,
         easing(t) {
           return t;
