@@ -39,7 +39,8 @@ const LOCATIONS: Location[] = [
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const animationInterval = useRef<NodeJS.Timeout | null>(null);
+  const currentLocationIndex = useRef<number>(0);
+  const isAnimating = useRef<boolean>(false);
 
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
@@ -56,6 +57,23 @@ const AmsterdamMap = () => {
       antialias: true
     });
 
+    const flyToNextLocation = () => {
+      if (!mapInstance.current || isAnimating.current) return;
+      
+      isAnimating.current = true;
+      currentLocationIndex.current = (currentLocationIndex.current + 1) % LOCATIONS.length;
+      const nextLocation = LOCATIONS[currentLocationIndex.current];
+      
+      mapInstance.current.flyTo({
+        center: nextLocation.coordinates,
+        zoom: nextLocation.zoom,
+        curve: 1,
+        easing(t) {
+          return t;
+        }
+      });
+    };
+
     mapInstance.current.on('load', () => {
       if (!mapInstance.current) return;
 
@@ -65,32 +83,17 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      let currentLocationIndex = 0;
-      const animateLocation = () => {
-        if (!mapInstance.current) return;
-        
-        currentLocationIndex = (currentLocationIndex + 1) % LOCATIONS.length;
-        const nextLocation = LOCATIONS[currentLocationIndex];
-        
-        mapInstance.current.flyTo({
-          center: nextLocation.coordinates,
-          zoom: nextLocation.zoom,
-          speed: 0.2,
-          curve: 1,
-          easing(t) {
-            return t;
-          }
-        });
-      };
+      // Start the animation cycle after a short delay
+      setTimeout(flyToNextLocation, 2000);
+    });
 
-      animationInterval.current = setInterval(animateLocation, 10000);
+    mapInstance.current.on('moveend', () => {
+      isAnimating.current = false;
+      // Schedule the next animation after a brief pause
+      setTimeout(flyToNextLocation, 1000);
     });
 
     return () => {
-      if (animationInterval.current) {
-        clearInterval(animationInterval.current);
-        animationInterval.current = null;
-      }
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
