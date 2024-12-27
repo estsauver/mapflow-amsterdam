@@ -28,6 +28,8 @@ const AMSTERDAM_LOCATIONS: Location[] = [
 
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const animationInterval = useRef<NodeJS.Timeout | null>(null);
   const [windowLoaded, setWindowLoaded] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
 
@@ -50,14 +52,11 @@ const AmsterdamMap = () => {
   useEffect(() => {
     if (!mapContainer.current || !windowLoaded || mapInitialized) return;
 
-    let map: mapboxgl.Map | null = null;
-    let animationInterval: NodeJS.Timeout | null = null;
-
     const initializeMap = () => {
       try {
         mapboxgl.accessToken = 'pk.eyJ1IjoiZXN0c2F1dmVyIiwiYSI6ImNtNTB4ODF1NzFoZjgyaHF3bWRwbXhzdDUifQ.8GwaYheqLbIJEb58x_-CLw';
         
-        map = new mapboxgl.Map({
+        mapInstance.current = new mapboxgl.Map({
           container: mapContainer.current!,
           style: 'mapbox://styles/mapbox/light-v11',
           center: AMSTERDAM_LOCATIONS[0].coordinates,
@@ -67,10 +66,10 @@ const AmsterdamMap = () => {
           antialias: true
         });
 
-        map.on('load', () => {
-          if (!map) return;
+        mapInstance.current.on('load', () => {
+          if (!mapInstance.current) return;
           
-          map.addLayer({
+          mapInstance.current.addLayer({
             'id': '3d-buildings',
             'source': 'composite',
             'source-layer': 'building',
@@ -85,7 +84,7 @@ const AmsterdamMap = () => {
             }
           });
 
-          map.setFog({
+          mapInstance.current.setFog({
             'color': 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
@@ -96,12 +95,12 @@ const AmsterdamMap = () => {
 
         let currentLocationIndex = 0;
         const animateLocation = () => {
-          if (!map) return;
+          if (!mapInstance.current) return;
           
           currentLocationIndex = (currentLocationIndex + 1) % AMSTERDAM_LOCATIONS.length;
           const nextLocation = AMSTERDAM_LOCATIONS[currentLocationIndex];
           
-          map.easeTo({
+          mapInstance.current.easeTo({
             center: nextLocation.coordinates,
             zoom: nextLocation.zoom,
             duration: 8000,
@@ -110,7 +109,7 @@ const AmsterdamMap = () => {
           });
         };
 
-        animationInterval = setInterval(animateLocation, 10000);
+        animationInterval.current = setInterval(animateLocation, 10000);
       } catch (error) {
         console.error('Error initializing map:', error);
       }
@@ -119,11 +118,13 @@ const AmsterdamMap = () => {
     initializeMap();
 
     return () => {
-      if (animationInterval) {
-        clearInterval(animationInterval);
+      if (animationInterval.current) {
+        clearInterval(animationInterval.current);
+        animationInterval.current = null;
       }
-      if (map) {
-        map.remove();
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
       }
       setMapInitialized(false);
     };
