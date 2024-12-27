@@ -17,17 +17,17 @@ const LOCATIONS: Location[] = [
   {
     name: 'Apollo Agriculture Office',
     coordinates: [4.890499, 52.365325],
-    zoom: 16
+    zoom: 15
   },
   {
     name: 'Nakuru',
     coordinates: [36.04418101125058, -0.29486913332733633],
-    zoom: 12
+    zoom: 14
   },
   {
     name: 'Nairobi',
     coordinates: [36.778706180168236, -1.2556971742421654],
-    zoom: 12
+    zoom: 14
   },
   {
     name: 'San Francisco',
