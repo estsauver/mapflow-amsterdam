@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import AboutDialog from './AboutDialog';
 import ProjectsDialog from './ProjectsDialog';
 import ContactDialog from './ContactDialog';
@@ -13,15 +12,12 @@ const Navigation = () => {
     <>
       <nav className="fixed top-8 right-8 z-10">
         <div className="glass-panel rounded-lg p-4">
+          <div className="mb-4 pb-4 border-b border-white/20">
+            <h1 className="text-2xl text-foreground">
+              Earl St Sauver
+            </h1>
+          </div>
           <ul className="space-y-2">
-            <li>
-              <Link
-                to="/"
-                className="block px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                Home
-              </Link>
-            </li>
             <li>
               <button
                 onClick={() => setProjectsOpen(true)}
