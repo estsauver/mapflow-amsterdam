@@ -2,30 +2,36 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const LOCATIONS = [
+type Location = {
+  name: string;
+  coordinates: [number, number]; // Explicitly typed as tuple
+  zoom: number;
+};
+
+const LOCATIONS: Location[] = [
   {
     name: 'Amsterdam City Center',
-    coordinates: [4.9041, 52.3676],
+    coordinates: [4.9041, 52.3676] as [number, number],
     zoom: 14
   },
   {
     name: 'Apollo Agriculture Office',
-    coordinates: [4.890499, 52.365325],
+    coordinates: [4.890499, 52.365325] as [number, number],
     zoom: 15
   },
   {
     name: 'Nakuru',
-    coordinates: [36.04418101125058, -0.29486913332733633],
+    coordinates: [36.04418101125058, -0.29486913332733633] as [number, number],
     zoom: 14
   },
   {
     name: 'Nairobi',
-    coordinates: [36.778706180168236, -1.2556971742421654],
+    coordinates: [36.778706180168236, -1.2556971742421654] as [number, number],
     zoom: 14
   },
   {
     name: 'San Francisco',
-    coordinates: [-122.41082156831577, 37.778590255955436],
+    coordinates: [-122.41082156831577, 37.778590255955436] as [number, number],
     zoom: 16
   }
 ];
@@ -78,7 +84,7 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      flyToNextLocation()
+      flyToNextLocation();
     });
 
     mapInstance.current.on('moveend', () => {
