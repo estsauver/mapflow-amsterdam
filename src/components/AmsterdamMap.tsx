@@ -68,6 +68,7 @@ const AmsterdamMap = () => {
         center: nextLocation.coordinates,
         zoom: nextLocation.zoom,
         curve: 1,
+        speed: 0.2,
         easing(t) {
           return t;
         }
