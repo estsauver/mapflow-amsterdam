@@ -92,7 +92,7 @@ const AmsterdamMap = () => {
     mapInstance.current.on('moveend', () => {
       isAnimating.current = false;
       // Schedule the next animation after a brief pause
-      setTimeout(flyToNextLocation, 1000);
+      // setTimeout(flyToNextLocation, 1000);
     });
 
     return () => {
