@@ -84,7 +84,7 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      flytToNextLocation()
+      flyToNextLocation()
       // // Start the animation cycle after a short delay
       // setTimeout(flyToNextLocation, 0);
     });
