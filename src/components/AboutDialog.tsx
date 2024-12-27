@@ -16,7 +16,7 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-panel border-none">
-        <DialogHeader>
+        <DialogHeader className="space-y-4">
           <DialogTitle className="font-beth-ellen text-2xl">About Me</DialogTitle>
           <DialogDescription className="text-lg">
             Hi, I'm Earl St Sauver. I'm passionate about building technology that makes a difference.
