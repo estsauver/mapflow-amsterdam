@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 type Location = {
   name: string;
-  coordinates: [number, number]; // Explicitly typed as tuple
+  coordinates: [number, number];
   zoom: number;
 };
 
@@ -41,6 +41,25 @@ const AmsterdamMap = () => {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const currentLocationIndex = useRef<number>(0);
   const isAnimating = useRef<boolean>(false);
+  const intervalRef = useRef<number | null>(null);
+
+  const flyToNextLocation = () => {
+    if (!mapInstance.current || isAnimating.current) return;
+    
+    isAnimating.current = true;
+    currentLocationIndex.current = (currentLocationIndex.current + 1) % LOCATIONS.length;
+    const nextLocation = LOCATIONS[currentLocationIndex.current];
+    
+    mapInstance.current.flyTo({
+      center: nextLocation.coordinates,
+      zoom: nextLocation.zoom,
+      curve: 1.42,
+      speed: 0.05,
+      easing(t) {
+        return t;
+      }
+    });
+  };
 
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
@@ -57,24 +76,6 @@ const AmsterdamMap = () => {
       antialias: true
     });
 
-    const flyToNextLocation = () => {
-      if (!mapInstance.current || isAnimating.current) return;
-      
-      isAnimating.current = true;
-      currentLocationIndex.current = (currentLocationIndex.current + 1) % LOCATIONS.length;
-      const nextLocation = LOCATIONS[currentLocationIndex.current];
-      
-      mapInstance.current.flyTo({
-        center: nextLocation.coordinates,
-        zoom: nextLocation.zoom,
-        curve: 1.42,
-        speed: 0.05,
-        easing(t) {
-          return t;
-        }
-      });
-    };
-
     mapInstance.current.on('load', () => {
       if (!mapInstance.current) return;
 
@@ -84,7 +85,15 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
+      // Start cycling through locations
       flyToNextLocation();
+      
+      // Set up interval to cycle through locations
+      intervalRef.current = window.setInterval(() => {
+        if (!isAnimating.current) {
+          flyToNextLocation();
+        }
+      }, 8000); // Wait 8 seconds between transitions
     });
 
     mapInstance.current.on('moveend', () => {
@@ -92,6 +101,9 @@ const AmsterdamMap = () => {
     });
 
     return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
