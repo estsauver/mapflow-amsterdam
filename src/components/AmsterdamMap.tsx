@@ -89,6 +89,7 @@ const AmsterdamMap = () => {
 
     mapInstance.current.on('moveend', () => {
       isAnimating.current = false;
+      flytToNextLocation();
     });
 
     return () => {
