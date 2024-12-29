@@ -54,7 +54,8 @@ const AmsterdamMap = () => {
       zoom: LOCATIONS[0].zoom,
       pitch: 45,
       bearing: -17.6,
-      antialias: true
+      antialias: true,
+      interactive: false
     });
 
     const flyToNextLocation = () => {
