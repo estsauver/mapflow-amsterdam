@@ -32,10 +32,6 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
               I started Apollo Agriculture with Eli and Ben to bring modern farming to everyone. 
               I wanted to clear the bottom level of Maslow's hierarchy of needs in our lifetime, for everyone.
             </p>
-
-            <p>
-              Currently just in awe of the acceleration of technology and trying to keep swimming in the flood. 
-            </p>
             
           </DialogDescription>
         </DialogHeader>
