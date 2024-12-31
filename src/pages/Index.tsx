@@ -13,10 +13,10 @@ const Index = () => {
             Welcome
           </span>
           <h1 className="text-4xl font-bold mb-4 animate-slide-up">
-            Your Name
+            Earl St Sauver
           </h1>
           <p className="text-lg text-muted-foreground animate-slide-up">
-            A brief introduction about yourself and what you do. This text will be replaced with your personal information.
+            Software engineer focused on developer tooling and productivity
           </p>
         </div>
       </main>
