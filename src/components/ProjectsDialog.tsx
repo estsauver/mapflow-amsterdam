@@ -31,11 +31,13 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-2">No, SQL</h3>
-                <p className="text-lg">
+                <h3 className="text-xl font-semibold mb-2">
                   <a href="https://nocommasql.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                    Examples and patterns showing how to accomplish common tasks in SQL that are often mistakenly thought to require NoSQL solutions.
+                    No, SQL
                   </a>
+                </h3>
+                <p className="text-lg">
+                  Examples and patterns showing how to accomplish common tasks in SQL that are often mistakenly thought to require NoSQL solutions.
                 </p>
               </div>
 
