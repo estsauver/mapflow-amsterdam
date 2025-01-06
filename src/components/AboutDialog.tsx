@@ -24,7 +24,7 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
             </p>
             
             <p>
-              I'm a deep believer that humanities greatest leverage lies where others won't tread. 
+              I'm a deep believer that humanity's greatest leverage lies where others won't tread. 
               I've always liked problems that feel impossible, but am trying to reform myself now that I have children.
             </p>
 
