@@ -1,36 +1,42 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 type Location = {
   name: string;
-  coordinates: [number, number]; // Explicitly typed as tuple
+  caption: string;
+  coordinates: [number, number];
   zoom: number;
 };
 
 const LOCATIONS: Location[] = [
   {
-    name: 'Amsterdam City Center',
+    name: 'Amsterdam',
+    caption: 'Home base. Building the future of farming.',
     coordinates: [4.9041, 52.3676] as [number, number],
     zoom: 14
   },
   {
-    name: 'Apollo Agriculture Office',
+    name: 'Apollo Agriculture',
+    caption: 'Amsterdam office. Where strategy meets execution.',
     coordinates: [4.890499, 52.365325] as [number, number],
     zoom: 15
   },
   {
-    name: 'Nakuru',
+    name: 'Nakuru, Kenya',
+    caption: 'Serving smallholder farmers in the Rift Valley.',
     coordinates: [36.04418101125058, -0.29486913332733633] as [number, number],
     zoom: 14
   },
   {
-    name: 'Nairobi',
+    name: 'Nairobi, Kenya',
+    caption: 'Apollo HQ. Where impossible problems get solved.',
     coordinates: [36.778706180168236, -1.2556971742421654] as [number, number],
     zoom: 14
   },
   {
     name: 'San Francisco',
+    caption: 'Where it all started.',
     coordinates: [-122.41082156831577, 37.778590255955436] as [number, number],
     zoom: 16
   }
@@ -41,6 +47,8 @@ const AmsterdamMap = () => {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const currentLocationIndex = useRef<number>(0);
   const isAnimating = useRef<boolean>(false);
+  const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[0]);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
@@ -60,11 +68,21 @@ const AmsterdamMap = () => {
 
     const flyToNextLocation = () => {
       if (!mapInstance.current || isAnimating.current) return;
-      
+
       isAnimating.current = true;
+
+      // Fade out caption before flying
+      setIsVisible(false);
+
       currentLocationIndex.current = (currentLocationIndex.current + 1) % LOCATIONS.length;
       const nextLocation = LOCATIONS[currentLocationIndex.current];
-      
+
+      // Update location and fade in after a short delay
+      setTimeout(() => {
+        setCurrentLocation(nextLocation);
+        setIsVisible(true);
+      }, 500);
+
       mapInstance.current.flyTo({
         center: nextLocation.coordinates,
         zoom: nextLocation.zoom,
@@ -107,6 +125,18 @@ const AmsterdamMap = () => {
         <div ref={mapContainer} className="w-full h-full" />
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none" />
+
+      {/* Location caption */}
+      <div
+        className={`absolute bottom-8 left-8 z-10 transition-opacity duration-500 ease-in-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="glass-panel px-6 py-4 max-w-md">
+          <h2 className="font-beth-ellen text-xl mb-1">{currentLocation.name}</h2>
+          <p className="text-sm text-muted-foreground">{currentLocation.caption}</p>
+        </div>
+      </div>
     </div>
   );
 };
