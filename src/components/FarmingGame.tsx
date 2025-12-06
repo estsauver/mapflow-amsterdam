@@ -9,37 +9,6 @@ interface DialogueState {
   showNext: boolean;
 }
 
-// Unit economics data (fictional)
-interface Economics {
-  costs: {
-    seeds: number;
-    fertilizer: number;
-    labor: number;
-    apolloFee: number;
-    interest: number;
-  };
-  revenue: {
-    yield: number;
-    pricePerBag: number;
-    bagsKept: number;
-  };
-}
-
-const ECONOMICS: Economics = {
-  costs: {
-    seeds: 2400,      // KES for 5kg hybrid seeds
-    fertilizer: 4800, // KES for 20kg total
-    labor: 3500,      // KES for season
-    apolloFee: 800,   // Service/delivery fee
-    interest: 1200,   // Credit interest
-  },
-  revenue: {
-    yield: 18,        // Bags of maize
-    pricePerBag: 3800, // KES per 90kg bag
-    bagsKept: 3,      // For family consumption
-  }
-};
-
 const GAME_SCENES: Record<GameScene, DialogueState[]> = {
   intro: [
     { speaker: 'NARRATOR', text: 'NAKURU COUNTY, KENYA...', showNext: true },
@@ -69,10 +38,10 @@ const GAME_SCENES: Record<GameScene, DialogueState[]> = {
   harvest: [
     { speaker: 'NARRATOR', text: 'HARVEST TIME', showNext: true },
     { speaker: 'WANJIKU', text: 'Look at this yield! Best harvest in years!', showNext: true },
-    { speaker: 'SYSTEM', text: `🌽 HARVESTED: ${ECONOMICS.revenue.yield} bags of maize`, showNext: true },
-    { speaker: 'SYSTEM', text: `💰 SOLD: ${ECONOMICS.revenue.yield - ECONOMICS.revenue.bagsKept} bags @ KES ${ECONOMICS.revenue.pricePerBag.toLocaleString()} each`, showNext: true },
-    { speaker: 'SYSTEM', text: `✅ LOAN REPAID: KES ${(ECONOMICS.costs.seeds + ECONOMICS.costs.fertilizer + ECONOMICS.costs.apolloFee + ECONOMICS.costs.interest).toLocaleString()}`, showNext: true },
-    { speaker: 'SYSTEM', text: `💵 NET PROFIT: KES ${(((ECONOMICS.revenue.yield - ECONOMICS.revenue.bagsKept) * ECONOMICS.revenue.pricePerBag) - (ECONOMICS.costs.seeds + ECONOMICS.costs.fertilizer + ECONOMICS.costs.labor + ECONOMICS.costs.apolloFee + ECONOMICS.costs.interest)).toLocaleString()}`, showNext: true },
+    { speaker: 'SYSTEM', text: '🌽 HARVESTED: 15 bags of maize', showNext: true },
+    { speaker: 'SYSTEM', text: '💰 SOLD: 12 bags @ KES 3,500 each', showNext: true },
+    { speaker: 'SYSTEM', text: '✅ LOAN REPAID: KES 8,500', showNext: true },
+    { speaker: 'SYSTEM', text: '💵 PROFIT: KES 33,500', showNext: true },
   ],
   success: [
     { speaker: 'WANJIKU', text: 'I can pay school fees AND save for next season!', showNext: true },
@@ -282,119 +251,6 @@ const GameBackground: React.FC<{ scene: GameScene }> = ({ scene }) => {
   );
 };
 
-// Economics panel
-const EconomicsPanel: React.FC<{ scene: GameScene }> = ({ scene }) => {
-  const sceneIndex = SCENE_ORDER.indexOf(scene);
-  const showCosts = sceneIndex >= 2; // After loan
-  const showRevenue = sceneIndex >= 4; // After harvest
-
-  const totalCosts = ECONOMICS.costs.seeds + ECONOMICS.costs.fertilizer + ECONOMICS.costs.labor + ECONOMICS.costs.apolloFee + ECONOMICS.costs.interest;
-  const grossRevenue = (ECONOMICS.revenue.yield - ECONOMICS.revenue.bagsKept) * ECONOMICS.revenue.pricePerBag;
-  const netProfit = grossRevenue - totalCosts;
-  const roi = ((netProfit / totalCosts) * 100).toFixed(0);
-
-  return (
-    <div
-      className="absolute bottom-32 left-8 bg-slate-900/95 border-2 border-amber-500/50 rounded-lg p-4 min-w-[280px]"
-      style={{ fontFamily: 'monospace' }}
-    >
-      <div className="text-amber-400 text-sm mb-3 font-bold border-b border-amber-500/30 pb-2">
-        📊 UNIT ECONOMICS (1 ACRE)*
-      </div>
-
-      {/* Costs Section */}
-      <div className="mb-3">
-        <div className="text-red-400 text-xs font-bold mb-1">COSTS:</div>
-        <div className="text-white text-xs space-y-0.5 pl-2">
-          <div className="flex justify-between">
-            <span className={showCosts ? 'text-white' : 'text-slate-600'}>Hybrid Seeds (5kg)</span>
-            <span className={showCosts ? 'text-red-300' : 'text-slate-600'}>
-              {showCosts ? `- KES ${ECONOMICS.costs.seeds.toLocaleString()}` : '???'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showCosts ? 'text-white' : 'text-slate-600'}>Fertilizer (20kg)</span>
-            <span className={showCosts ? 'text-red-300' : 'text-slate-600'}>
-              {showCosts ? `- KES ${ECONOMICS.costs.fertilizer.toLocaleString()}` : '???'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showCosts ? 'text-white' : 'text-slate-600'}>Labor</span>
-            <span className={showCosts ? 'text-red-300' : 'text-slate-600'}>
-              {showCosts ? `- KES ${ECONOMICS.costs.labor.toLocaleString()}` : '???'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showCosts ? 'text-white' : 'text-slate-600'}>Apollo Fee</span>
-            <span className={showCosts ? 'text-red-300' : 'text-slate-600'}>
-              {showCosts ? `- KES ${ECONOMICS.costs.apolloFee.toLocaleString()}` : '???'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showCosts ? 'text-white' : 'text-slate-600'}>Credit Interest</span>
-            <span className={showCosts ? 'text-red-300' : 'text-slate-600'}>
-              {showCosts ? `- KES ${ECONOMICS.costs.interest.toLocaleString()}` : '???'}
-            </span>
-          </div>
-          <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
-            <span className="font-bold">TOTAL COSTS</span>
-            <span className={showCosts ? 'text-red-400 font-bold' : 'text-slate-600'}>
-              {showCosts ? `- KES ${totalCosts.toLocaleString()}` : '???'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Revenue Section */}
-      <div className="mb-3">
-        <div className="text-green-400 text-xs font-bold mb-1">REVENUE:</div>
-        <div className="text-white text-xs space-y-0.5 pl-2">
-          <div className="flex justify-between">
-            <span className={showRevenue ? 'text-white' : 'text-slate-600'}>
-              Yield: {showRevenue ? `${ECONOMICS.revenue.yield} bags` : '?? bags'}
-            </span>
-            <span className="text-slate-500">@ KES {ECONOMICS.revenue.pricePerBag.toLocaleString()}/bag</span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showRevenue ? 'text-white' : 'text-slate-600'}>Family keeps</span>
-            <span className={showRevenue ? 'text-slate-400' : 'text-slate-600'}>
-              {showRevenue ? `${ECONOMICS.revenue.bagsKept} bags` : '?'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className={showRevenue ? 'text-white' : 'text-slate-600'}>Sold to market</span>
-            <span className={showRevenue ? 'text-green-300' : 'text-slate-600'}>
-              {showRevenue ? `${ECONOMICS.revenue.yield - ECONOMICS.revenue.bagsKept} bags` : '?'}
-            </span>
-          </div>
-          <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
-            <span className="font-bold">GROSS REVENUE</span>
-            <span className={showRevenue ? 'text-green-400 font-bold' : 'text-slate-600'}>
-              {showRevenue ? `+ KES ${grossRevenue.toLocaleString()}` : '???'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Profit Section */}
-      <div className="border-t-2 border-amber-500/50 pt-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-amber-400 font-bold">NET PROFIT</span>
-          <span className={showRevenue ? 'text-green-400 font-bold' : 'text-slate-600'}>
-            {showRevenue ? `KES ${netProfit.toLocaleString()}` : '???'}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs mt-1">
-          <span className="text-slate-400">Return on Investment</span>
-          <span className={showRevenue ? 'text-cyan-400 font-bold' : 'text-slate-600'}>
-            {showRevenue ? `${roi}%` : '???'}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Dialogue box component
 const DialogueBox: React.FC<{
   dialogue: DialogueState;
@@ -522,20 +378,6 @@ const ApolloBadge: React.FC = () => (
   </div>
 );
 
-// Disclaimer footer
-const Disclaimer: React.FC = () => (
-  <div
-    className="absolute bottom-2 left-1/2 -translate-x-1/2 text-center max-w-3xl px-4"
-    style={{ fontFamily: 'monospace' }}
-  >
-    <p className="text-slate-500 text-[10px] leading-tight">
-      * These unit economics are entirely fictional and for illustrative purposes only.
-      If you want real numbers, go do the work and bring some competition to the space.
-      Smallholder farmers deserve more options.
-    </p>
-  </div>
-);
-
 // Main component - now fullscreen
 const FarmingGame: React.FC = () => {
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
@@ -627,7 +469,6 @@ const FarmingGame: React.FC = () => {
       <div className="relative w-full h-full" onClick={handleNext}>
         <GameBackground scene={currentScene} />
         <StatsDisplay scene={currentScene} />
-        <EconomicsPanel scene={currentScene} />
         <ApolloBadge />
 
         {currentDialogue && (
@@ -638,8 +479,6 @@ const FarmingGame: React.FC = () => {
             displayedText={displayedText}
           />
         )}
-
-        <Disclaimer />
       </div>
 
       {/* Auto-play toggle */}
