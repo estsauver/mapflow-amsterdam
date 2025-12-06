@@ -241,10 +241,10 @@ const GameBackground: React.FC<{ scene: GameScene }> = ({ scene }) => {
         ))}
       </div>
 
-      {/* Farm crops */}
-      <div className="absolute bottom-0 left-0 right-0 h-[20%] flex items-end justify-center gap-2 pb-4">
-        {cropStage && Array.from({ length: cropCount }).map((_, i) => (
-          <CropSprite key={i} stage={cropStage as 'seed' | 'sprout' | 'growing' | 'mature'} scale={2} />
+      {/* Farm crops - spread across field */}
+      <div className="absolute bottom-[2%] left-[10%] right-[10%] flex items-end justify-between">
+        {cropStage && Array.from({ length: 12 }).map((_, i) => (
+          <CropSprite key={i} stage={cropStage as 'seed' | 'sprout' | 'growing' | 'mature'} scale={1.5} />
         ))}
       </div>
     </div>
@@ -348,7 +348,7 @@ const StatsDisplay: React.FC<{ scene: GameScene }> = ({ scene }) => {
 
   return (
     <div
-      className="absolute top-8 left-8 bg-slate-900/90 border-2 border-slate-600 rounded-lg p-4"
+      className="absolute top-4 left-4 bg-slate-900/90 border-2 border-slate-600 rounded-lg p-3"
       style={{ fontFamily: 'monospace' }}
     >
       <div className="text-green-400 text-sm mb-3 font-bold">═══ FARM STATUS ═══</div>
@@ -370,11 +370,11 @@ const StatsDisplay: React.FC<{ scene: GameScene }> = ({ scene }) => {
 // Apollo logo badge
 const ApolloBadge: React.FC = () => (
   <div
-    className="absolute top-8 left-1/2 -translate-x-1/2 bg-green-600/90 border-2 border-green-400 rounded-lg px-6 py-3"
+    className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-600/90 border-2 border-green-400 rounded-lg px-4 py-2"
     style={{ fontFamily: 'monospace' }}
   >
-    <div className="text-white text-lg font-bold tracking-widest text-center">APOLLO FARMER</div>
-    <div className="text-green-200 text-xs text-center">SEEDS OF PROSPERITY</div>
+    <div className="text-white text-sm font-bold tracking-widest text-center">APOLLO FARMER</div>
+    <div className="text-green-200 text-[10px] text-center">SEEDS OF PROSPERITY</div>
   </div>
 );
 
@@ -447,7 +447,10 @@ const FarmingGame: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950" style={{ imageRendering: 'pixelated' }}>
+    <div
+      className="relative w-full h-full min-h-[400px] bg-slate-950 overflow-hidden"
+      style={{ imageRendering: 'pixelated' }}
+    >
       {/* Scanline overlay */}
       <div
         className="absolute inset-0 pointer-events-none z-50"
@@ -484,7 +487,7 @@ const FarmingGame: React.FC = () => {
       {/* Auto-play toggle */}
       <button
         onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
-        className="absolute top-8 right-8 bg-slate-800/90 border-2 border-slate-600 rounded px-4 py-2 text-sm text-white hover:bg-slate-700 transition-colors z-30"
+        className="absolute top-4 right-4 bg-slate-800/90 border-2 border-slate-600 rounded px-3 py-1 text-xs text-white hover:bg-slate-700 transition-colors z-30"
         style={{ fontFamily: 'monospace' }}
       >
         {isAutoPlaying ? '⏸ PAUSE' : '▶ AUTO'}
