@@ -13,6 +13,7 @@ interface ProjectsDialogProps {
 interface Project {
   id: string;
   name: string;
+  role?: string;
   description: string;
   hasGame: boolean;
   link?: string;
@@ -22,6 +23,7 @@ const PROJECTS: Project[] = [
   {
     id: 'apollo',
     name: 'Apollo Agriculture',
+    role: 'Founder, CTO (2015-2023)',
     description: 'Providing smallholder farmers in Africa with access to credit, high-quality seeds, fertilizer, and data-driven agronomic advice.',
     hasGame: true,
   },
@@ -134,7 +136,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
             <div className="text-xs text-slate-500 mb-1">
               PROJECT {currentProjectIndex + 1} OF {PROJECTS.length}
             </div>
-            <h3 className={`font-bold text-lg mb-2 ${currentProject.id === 'apollo' ? 'text-green-400' : 'text-white'}`}>
+            <h3 className={`font-bold text-lg ${currentProject.role ? 'mb-1' : 'mb-2'} ${currentProject.id === 'apollo' ? 'text-green-400' : 'text-white'}`}>
               {currentProject.link ? (
                 <a href={currentProject.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
                   {currentProject.name}
@@ -143,6 +145,9 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
                 currentProject.name
               )}
             </h3>
+            {currentProject.role && (
+              <p className="text-xs text-slate-500 mb-2">{currentProject.role}</p>
+            )}
             <p className="text-sm text-slate-400">
               {currentProject.description}
             </p>
