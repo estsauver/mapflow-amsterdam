@@ -31,7 +31,7 @@ const GAME_SCENES: Record<GameScene, DialogueState[]> = {
   ],
   growing: [
     { speaker: 'NARRATOR', text: '3 months later...', showNext: true },
-    { speaker: 'SMS', text: '📱 APOLLO: Apply top-dress now. Rain expected Thursday.', showNext: true },
+    { speaker: 'SMS', text: '📱 APOLLO: Apply top-dress now. Rain expected soon.', showNext: true },
     { speaker: 'WANJIKU', text: 'The SMS alerts really help with timing!', showNext: true },
     { speaker: 'NARRATOR', text: 'The crops grow strong and tall...', showNext: true },
   ],
