@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import AboutDialog from './AboutDialog';
 import ProjectsDialog from './ProjectsDialog';
 import ContactDialog from './ContactDialog';
+import FarmingGameDialog from './FarmingGameDialog';
 
 const Navigation = () => {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [farmingGameOpen, setFarmingGameOpen] = useState(false);
   
   return (
     <>
@@ -42,12 +44,21 @@ const Navigation = () => {
                 Contact
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => setFarmingGameOpen(true)}
+                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20 text-green-400"
+              >
+                Apollo Demo
+              </button>
+            </li>
           </ul>
         </div>
       </nav>
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       <ProjectsDialog open={projectsOpen} onOpenChange={setProjectsOpen} />
       <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
+      <FarmingGameDialog open={farmingGameOpen} onOpenChange={setFarmingGameOpen} />
     </>
   );
 };
