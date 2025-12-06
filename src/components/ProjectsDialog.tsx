@@ -21,11 +21,15 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
           <DialogDescription className="space-y-6">
             <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-semibold mb-2">EMTools</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  <a href="https://engineeringmanagertools.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                    Engineering Manager Tools
+                  </a>
+                </h3>
                 <p className="text-lg">
-                  I want to let every engineering manager execute at a Tech Lead level. 
-                  Automated tooling to import all engineering work (code, reviews, debugging), 
-                  communication, and planning and automate the mechanical parts of management 
+                  I want to let every engineering manager execute at a Tech Lead level.
+                  Automated tooling to import all engineering work (code, reviews, debugging),
+                  communication, and planning and automate the mechanical parts of management
                   (external communications, performance tracking, status updates.)
                 </p>
               </div>
@@ -42,16 +46,20 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-2">Infinite Story Time</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  <a href="https://github.com/estsauver/dspy-spotlight" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                    dspy-spotlight
+                  </a>
+                </h3>
                 <p className="text-lg">
-                  Interactive indefinite stories using consist characters, prompted by children.
+                  LLM sanitization tooling for DSPy.
                 </p>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-2">PanChannel</h3>
+                <h3 className="text-xl font-semibold mb-2">(Stealth) Children's Book Publisher</h3>
                 <p className="text-lg">
-                  Convert one form of marketing material to another channel. Inspired by pandoc.
+                  Publishing children's books using AI generated stories and images.
                 </p>
               </div>
             </div>
