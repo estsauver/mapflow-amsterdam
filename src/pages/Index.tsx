@@ -1,11 +1,11 @@
 import React from 'react';
-import AmsterdamMap from '../components/AmsterdamMap';
+import FarmingGame from '../components/FarmingGame';
 import Navigation from '../components/Navigation';
 
 const Index = () => {
   return (
     <div className="relative min-h-screen">
-      <AmsterdamMap />
+      <FarmingGame />
       <Navigation />
     </div>
   );
