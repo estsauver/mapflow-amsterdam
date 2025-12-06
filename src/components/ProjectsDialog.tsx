@@ -28,11 +28,11 @@ const PROJECTS: Project[] = [
     hasGame: true,
   },
   {
-    id: 'emtools',
-    name: 'Engineering Manager Tools',
-    description: 'Automated tooling to let every engineering manager execute at a Tech Lead level.',
+    id: 'universal-estimator',
+    name: 'Universal Estimator',
+    description: 'AI-powered estimation tool for software projects.',
     hasGame: false,
-    link: 'https://engineeringmanagertools.com',
+    link: 'https://universalestimator.com',
   },
   {
     id: 'nosql',
