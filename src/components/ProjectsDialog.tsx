@@ -4,6 +4,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import FarmingGame from './FarmingGame';
+import EstimatorGame from './EstimatorGame';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -30,8 +31,8 @@ const PROJECTS: Project[] = [
   {
     id: 'universal-estimator',
     name: 'Universal Estimator',
-    description: 'AI-powered estimation tool for software projects.',
-    hasGame: false,
+    description: 'AI-powered estimation tool using token probability distributions to reveal true uncertainty in software estimates.',
+    hasGame: true,
     link: 'https://universalestimator.com',
   },
   {
@@ -72,6 +73,8 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     switch (currentProject.id) {
       case 'apollo':
         return <FarmingGame />;
+      case 'universal-estimator':
+        return <EstimatorGame />;
       default:
         // Coming soon placeholder for other projects
         return (
