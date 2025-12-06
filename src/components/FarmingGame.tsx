@@ -39,9 +39,9 @@ const GAME_SCENES: Record<GameScene, DialogueState[]> = {
     { speaker: 'NARRATOR', text: 'HARVEST TIME', showNext: true },
     { speaker: 'WANJIKU', text: 'Look at this yield! Best harvest in years!', showNext: true },
     { speaker: 'SYSTEM', text: '🌽 HARVESTED: 15 bags of maize', showNext: true },
-    { speaker: 'SYSTEM', text: '💰 SOLD: 12 bags @ KES 3,500 each', showNext: true },
-    { speaker: 'SYSTEM', text: '✅ LOAN REPAID: KES 8,500', showNext: true },
-    { speaker: 'SYSTEM', text: '💵 PROFIT: KES 33,500', showNext: true },
+    { speaker: 'SYSTEM', text: '💰 SOLD: 12 bags @ 350 Gold Coins each', showNext: true },
+    { speaker: 'SYSTEM', text: '✅ LOAN REPAID: 850 Gold Coins', showNext: true },
+    { speaker: 'SYSTEM', text: '💵 PROFIT: 3,350 Gold Coins', showNext: true },
   ],
   success: [
     { speaker: 'WANJIKU', text: 'I can pay school fees AND save for next season!', showNext: true },
@@ -383,7 +383,7 @@ const StatsDisplay: React.FC<{ scene: GameScene }> = ({ scene }) => {
       year: '2024',
       location: 'Nakuru, Kenya',
       credit: sceneIndex >= 2 ? (sceneIndex >= 5 ? 'REPAID' : 'ACTIVE') : 'NONE',
-      yield: sceneIndex >= 4 ? '+180%' : sceneIndex >= 3 ? '+120%' : '--',
+      yield: sceneIndex >= 4 ? 'A lot...' : sceneIndex >= 3 ? 'More...' : '--',
     };
   };
 
