@@ -320,9 +320,9 @@ const DialogueBox: React.FC<{
 
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-8">
-      {/* Character portrait area */}
+      {/* Character portrait area - positioned higher */}
       {showSprite && (
-        <div className="absolute -top-24 left-12 z-10">
+        <div className="absolute -top-36 left-12 z-10">
           <div className="bg-slate-900/90 border-4 border-slate-600 p-3 rounded">
             <FarmerSprite
               variant={getSpeakerVariant(dialogue.speaker)}

@@ -1,10 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import FarmingGame from './FarmingGame';
 
@@ -13,67 +10,161 @@ interface ProjectsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  hasGame: boolean;
+  link?: string;
+}
+
+const PROJECTS: Project[] = [
+  {
+    id: 'apollo',
+    name: 'Apollo Agriculture',
+    description: 'Providing smallholder farmers in Africa with access to credit, high-quality seeds, fertilizer, and data-driven agronomic advice.',
+    hasGame: true,
+  },
+  {
+    id: 'emtools',
+    name: 'Engineering Manager Tools',
+    description: 'Automated tooling to let every engineering manager execute at a Tech Lead level.',
+    hasGame: false,
+    link: 'https://engineeringmanagertools.com',
+  },
+  {
+    id: 'nosql',
+    name: 'No, SQL',
+    description: 'Examples showing how to accomplish tasks often mistakenly thought to require NoSQL.',
+    hasGame: false,
+    link: 'https://nocommasql.com',
+  },
+  {
+    id: 'dspy',
+    name: 'dspy-spotlight',
+    description: 'LLM sanitization tooling for DSPy.',
+    hasGame: false,
+    link: 'https://github.com/estsauver/dspy-spotlight',
+  },
+  {
+    id: 'childrens',
+    name: "(Stealth) Children's Book Publisher",
+    description: 'Publishing children\'s books using AI generated stories and images.',
+    hasGame: false,
+  },
+];
+
 const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
+  const currentProject = PROJECTS[currentProjectIndex];
+
+  const goToPrevProject = () => {
+    setCurrentProjectIndex((prev) => (prev > 0 ? prev - 1 : PROJECTS.length - 1));
+  };
+
+  const goToNextProject = () => {
+    setCurrentProjectIndex((prev) => (prev < PROJECTS.length - 1 ? prev + 1 : 0));
+  };
+
+  const renderProjectGame = () => {
+    switch (currentProject.id) {
+      case 'apollo':
+        return <FarmingGame />;
+      default:
+        // Coming soon placeholder for other projects
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
+            <div className="text-center space-y-4">
+              <div className="text-6xl">🚧</div>
+              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
+                GAME COMING SOON
+              </h2>
+              <p className="text-slate-400 max-w-md" style={{ fontFamily: 'monospace' }}>
+                {currentProject.description}
+              </p>
+              {currentProject.link && (
+                <a
+                  href={currentProject.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
+                  style={{ fontFamily: 'monospace' }}
+                >
+                  Visit Project →
+                </a>
+              )}
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-950 border-slate-700 max-w-[95vw] w-[95vw] h-[90vh] p-0 overflow-hidden">
         <div className="relative w-full h-full">
-          <FarmingGame />
+          {/* Current project game */}
+          {renderProjectGame()}
 
-          {/* Projects overlay in upper right */}
-          <div className="absolute top-4 right-16 z-20 glass-panel rounded-lg p-4 max-w-sm max-h-[70vh] overflow-y-auto">
-            <DialogHeader className="mb-4">
-              <DialogTitle className="font-beth-ellen text-xl">Projects</DialogTitle>
-            </DialogHeader>
-            <DialogDescription className="space-y-4 text-sm">
-              <div>
-                <h3 className="font-semibold mb-1 text-green-400">Apollo Agriculture</h3>
-                <p>
-                  Providing smallholder farmers in Africa with access to credit, high-quality seeds,
-                  fertilizer, and data-driven agronomic advice to increase their yields and income.
-                </p>
-              </div>
+          {/* Project navigation - left side */}
+          <div className="absolute top-1/2 left-4 -translate-y-1/2 z-20 flex flex-col gap-2">
+            <button
+              onClick={goToPrevProject}
+              className="bg-slate-800/90 hover:bg-slate-700 border-2 border-slate-600 rounded-lg p-3 text-white transition-colors"
+              style={{ fontFamily: 'monospace' }}
+              title="Previous project"
+            >
+              ▲
+            </button>
+            <button
+              onClick={goToNextProject}
+              className="bg-slate-800/90 hover:bg-slate-700 border-2 border-slate-600 rounded-lg p-3 text-white transition-colors"
+              style={{ fontFamily: 'monospace' }}
+              title="Next project"
+            >
+              ▼
+            </button>
+          </div>
 
-              <div>
-                <h3 className="font-semibold mb-1">
-                  <a href="https://engineeringmanagertools.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                    Engineering Manager Tools
-                  </a>
-                </h3>
-                <p>
-                  Automated tooling to let every engineering manager execute at a Tech Lead level.
-                </p>
-              </div>
+          {/* Current project indicator */}
+          <div
+            className="absolute top-4 right-16 z-20 bg-slate-900/95 border-2 border-slate-600 rounded-lg p-4 max-w-xs"
+            style={{ fontFamily: 'monospace' }}
+          >
+            <div className="text-xs text-slate-500 mb-1">
+              PROJECT {currentProjectIndex + 1} OF {PROJECTS.length}
+            </div>
+            <h3 className={`font-bold text-lg mb-2 ${currentProject.id === 'apollo' ? 'text-green-400' : 'text-white'}`}>
+              {currentProject.link ? (
+                <a href={currentProject.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                  {currentProject.name}
+                </a>
+              ) : (
+                currentProject.name
+              )}
+            </h3>
+            <p className="text-sm text-slate-400">
+              {currentProject.description}
+            </p>
+            <div className="mt-3 text-xs text-slate-600">
+              Use ▲▼ to browse projects
+            </div>
+          </div>
 
-              <div>
-                <h3 className="font-semibold mb-1">
-                  <a href="https://nocommasql.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                    No, SQL
-                  </a>
-                </h3>
-                <p>
-                  Examples showing how to accomplish tasks often mistakenly thought to require NoSQL.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-1">
-                  <a href="https://github.com/estsauver/dspy-spotlight" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                    dspy-spotlight
-                  </a>
-                </h3>
-                <p>
-                  LLM sanitization tooling for DSPy.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-1">(Stealth) Children's Book Publisher</h3>
-                <p>
-                  Publishing children's books using AI generated stories and images.
-                </p>
-              </div>
-            </DialogDescription>
+          {/* Project dots indicator */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {PROJECTS.map((project, index) => (
+              <button
+                key={project.id}
+                onClick={() => setCurrentProjectIndex(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentProjectIndex
+                    ? 'bg-green-500'
+                    : 'bg-slate-600 hover:bg-slate-500'
+                }`}
+                title={project.name}
+              />
+            ))}
           </div>
         </div>
       </DialogContent>
