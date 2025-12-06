@@ -12,7 +12,7 @@ type Location = {
 const LOCATIONS: Location[] = [
   {
     name: 'Amsterdam',
-    caption: 'Home base. Building the future of farming.',
+    caption: 'Home base.',
     coordinates: [4.9041, 52.3676] as [number, number],
     zoom: 14
   },
