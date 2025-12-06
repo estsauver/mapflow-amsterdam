@@ -105,8 +105,67 @@ const FarmerSprite: React.FC<{ variant?: 'farmer' | 'agent'; emotion?: 'neutral'
   );
 };
 
-// Crop sprite that grows
+// Crop sprite that grows - maize gets very tall when mature
 const CropSprite: React.FC<{ stage: 'seed' | 'sprout' | 'growing' | 'mature'; scale?: number }> = ({ stage, scale = 1 }) => {
+  // Mature maize is much taller
+  if (stage === 'mature') {
+    return (
+      <div className="pixel-sprite" style={{ imageRendering: 'pixelated' }}>
+        <svg width={24 * scale} height={120 * scale} viewBox="0 0 6 30" className="crisp-edges">
+          {/* Tall stalk */}
+          <rect x="2" y="4" width="2" height="25" fill="#22C55E" />
+
+          {/* Lower leaves */}
+          <rect x="0" y="22" width="2" height="4" fill="#16A34A" />
+          <rect x="4" y="20" width="2" height="4" fill="#16A34A" />
+          <rect x="0" y="16" width="2" height="3" fill="#16A34A" />
+          <rect x="4" y="14" width="2" height="3" fill="#16A34A" />
+
+          {/* Middle leaves */}
+          <rect x="0" y="10" width="2" height="3" fill="#22C55E" />
+          <rect x="4" y="8" width="2" height="3" fill="#22C55E" />
+
+          {/* Corn cobs with husks */}
+          <rect x="4" y="11" width="2" height="4" fill="#FCD34D" />
+          <rect x="4" y="10" width="1" height="1" fill="#16A34A" />
+          <rect x="0" y="15" width="2" height="4" fill="#FCD34D" />
+          <rect x="1" y="14" width="1" height="1" fill="#16A34A" />
+
+          {/* Tassel at top */}
+          <rect x="1" y="0" width="1" height="4" fill="#D4A574" />
+          <rect x="2" y="1" width="1" height="3" fill="#D4A574" />
+          <rect x="3" y="0" width="1" height="4" fill="#D4A574" />
+          <rect x="4" y="2" width="1" height="2" fill="#D4A574" />
+          <rect x="0" y="2" width="1" height="2" fill="#D4A574" />
+
+          {/* Ground */}
+          <rect x="1" y="29" width="4" height="1" fill="#8B4513" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (stage === 'growing') {
+    return (
+      <div className="pixel-sprite" style={{ imageRendering: 'pixelated' }}>
+        <svg width={24 * scale} height={60 * scale} viewBox="0 0 6 15" className="crisp-edges">
+          {/* Medium stalk */}
+          <rect x="2" y="3" width="2" height="11" fill="#22C55E" />
+
+          {/* Leaves */}
+          <rect x="0" y="8" width="2" height="3" fill="#16A34A" />
+          <rect x="4" y="6" width="2" height="3" fill="#16A34A" />
+          <rect x="0" y="4" width="2" height="2" fill="#22C55E" />
+          <rect x="4" y="3" width="2" height="2" fill="#22C55E" />
+
+          {/* Ground */}
+          <rect x="1" y="14" width="4" height="1" fill="#8B4513" />
+        </svg>
+      </div>
+    );
+  }
+
+  // Seed and sprout remain small
   return (
     <div className="pixel-sprite" style={{ imageRendering: 'pixelated' }}>
       <svg width={24 * scale} height={32 * scale} viewBox="0 0 6 8" className="crisp-edges">
@@ -118,25 +177,9 @@ const CropSprite: React.FC<{ stage: 'seed' | 'sprout' | 'growing' | 'mature'; sc
         )}
         {stage === 'sprout' && (
           <>
-            <rect x="2" y="5" width="2" height="2" fill="#22C55E" />
-            <rect x="2" y="7" width="2" height="1" fill="#8B4513" />
-          </>
-        )}
-        {stage === 'growing' && (
-          <>
-            <rect x="2" y="2" width="2" height="5" fill="#22C55E" />
-            <rect x="1" y="3" width="1" height="2" fill="#16A34A" />
-            <rect x="4" y="4" width="1" height="2" fill="#16A34A" />
-            <rect x="2" y="7" width="2" height="1" fill="#8B4513" />
-          </>
-        )}
-        {stage === 'mature' && (
-          <>
-            <rect x="2" y="0" width="2" height="7" fill="#22C55E" />
-            <rect x="0" y="1" width="2" height="3" fill="#16A34A" />
-            <rect x="4" y="2" width="2" height="3" fill="#16A34A" />
-            <rect x="1" y="0" width="1" height="2" fill="#FCD34D" />
-            <rect x="4" y="0" width="1" height="2" fill="#FCD34D" />
+            <rect x="2" y="4" width="2" height="3" fill="#22C55E" />
+            <rect x="1" y="5" width="1" height="1" fill="#16A34A" />
+            <rect x="4" y="5" width="1" height="1" fill="#16A34A" />
             <rect x="2" y="7" width="2" height="1" fill="#8B4513" />
           </>
         )}
@@ -241,10 +284,10 @@ const GameBackground: React.FC<{ scene: GameScene }> = ({ scene }) => {
         ))}
       </div>
 
-      {/* Farm crops - spread across field */}
-      <div className="absolute bottom-[2%] left-[10%] right-[10%] flex items-end justify-between">
-        {cropStage && Array.from({ length: 12 }).map((_, i) => (
-          <CropSprite key={i} stage={cropStage as 'seed' | 'sprout' | 'growing' | 'mature'} scale={1.5} />
+      {/* Farm crops - spread across field, aligned at bottom */}
+      <div className="absolute bottom-[5%] left-[5%] right-[5%] flex items-end justify-around">
+        {cropStage && Array.from({ length: 10 }).map((_, i) => (
+          <CropSprite key={i} stage={cropStage as 'seed' | 'sprout' | 'growing' | 'mature'} scale={2} />
         ))}
       </div>
     </div>
