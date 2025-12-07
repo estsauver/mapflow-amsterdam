@@ -30,9 +30,8 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
             </p>
 
             <p>
-              I'm drawn to problems at the edges—the ones that seem impossible until someone
-              actually tries. Though these days, with kids in the picture, I'm learning that
-              some of the best problems to solve are closer to home.
+              While I'm drawn to barely possible problems, I'm now a Dad with two
+              children, so I am trying to learn that I have limits.
             </p>
 
             <p>
