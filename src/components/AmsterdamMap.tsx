@@ -127,7 +127,9 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      flyToNextLocation();
+      // Don't immediately fly to next location on load
+      // Let the 'idle' handler start the animation cycle after the initial view settles
+      // This prevents the caption from changing before the map finishes loading
     });
 
     mapInstance.current.on('idle', () => {
