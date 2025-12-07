@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/dialog";
 import FarmingGame from './FarmingGame';
 import EstimatorGame from './EstimatorGame';
+import SqlGame from './SqlGame';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -39,7 +40,7 @@ const PROJECTS: Project[] = [
     id: 'nosql',
     name: 'No, SQL',
     description: 'Examples showing how to accomplish tasks often mistakenly thought to require NoSQL.',
-    hasGame: false,
+    hasGame: true,
     link: 'https://nocommasql.com',
   },
   {
@@ -75,6 +76,8 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
         return <FarmingGame />;
       case 'universal-estimator':
         return <EstimatorGame />;
+      case 'nosql':
+        return <SqlGame />;
       default:
         // Coming soon placeholder for other projects
         return (
