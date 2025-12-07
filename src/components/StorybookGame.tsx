@@ -1,356 +1,434 @@
 import React, { useState, useEffect } from 'react';
 
-type GameScene = 'night' | 'book_glows' | 'dreams' | 'story_forms' | 'goodnight';
+type GameScene = 'library' | 'request' | 'creating' | 'reveal' | 'complete';
 
-interface Star {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  delay: number;
+interface BookRequest {
+  childName: string;
+  request: string;
+  bookTitle: string;
+  bookCover: string;
+  storyPreview: string;
 }
 
-interface DreamBubble {
-  id: number;
-  x: number;
-  emoji: string;
-  label: string;
-  color: string;
-  delay: number;
-  popped: boolean;
-}
-
-const STORY_ELEMENTS = [
-  { emoji: '🦊', label: 'A curious little fox', color: 'from-orange-400 to-amber-500' },
-  { emoji: '🌙', label: 'A magical moonlit night', color: 'from-purple-400 to-indigo-500' },
-  { emoji: '🌟', label: 'A wish upon a star', color: 'from-yellow-300 to-amber-400' },
-  { emoji: '🏡', label: 'A cozy woodland home', color: 'from-green-400 to-emerald-500' },
-  { emoji: '💫', label: 'And a sprinkle of magic', color: 'from-pink-400 to-rose-500' },
+const BOOK_REQUESTS: BookRequest[] = [
+  {
+    childName: 'Emma',
+    request: 'I want a book about a dinosaur construction worker!',
+    bookTitle: 'Dino Builds a House',
+    bookCover: '🦕🏗️',
+    storyPreview: 'Terry the T-Rex loved building things...',
+  },
+  {
+    childName: 'Marcus',
+    request: 'Can I have a story about a princess who flies rockets?',
+    bookTitle: 'Princess Starlight',
+    bookCover: '👸🚀',
+    storyPreview: 'Princess Nova dreamed of the stars...',
+  },
+  {
+    childName: 'Sofia',
+    request: 'I want a book about a bunny who bakes cookies!',
+    bookTitle: 'Benny\'s Bakery',
+    bookCover: '🐰🍪',
+    storyPreview: 'In a cozy burrow, Benny mixed the dough...',
+  },
 ];
 
-const generateStars = (count: number): Star[] => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 60,
-    size: Math.random() * 2 + 1,
-    delay: Math.random() * 3,
-  }));
-};
-
 const StorybookGame: React.FC = () => {
-  const [scene, setScene] = useState<GameScene>('night');
-  const [stars] = useState<Star[]>(() => generateStars(50));
-  const [showMoon, setShowMoon] = useState(false);
-  const [bookGlowing, setBookGlowing] = useState(false);
-  const [dreamBubbles, setDreamBubbles] = useState<DreamBubble[]>([]);
-  const [storyLines, setStoryLines] = useState<string[]>([]);
-  const [showStealth, setShowStealth] = useState(false);
+  const [scene, setScene] = useState<GameScene>('library');
+  const [currentRequestIndex, setCurrentRequestIndex] = useState(0);
+  const [typedRequest, setTypedRequest] = useState('');
+  const [showRobot, setShowRobot] = useState(true);
+  const [creatingPhase, setCreatingPhase] = useState(0);
+  const [booksCreated, setBooksCreated] = useState(0);
+  const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
 
-  // Night scene - moon appears
+  const currentRequest = BOOK_REQUESTS[currentRequestIndex];
+
+  // Library intro
   useEffect(() => {
-    if (scene !== 'night') return;
+    if (scene !== 'library') return;
+    const timeout = setTimeout(() => setScene('request'), 2500);
+    return () => clearTimeout(timeout);
+  }, [scene]);
 
-    const moonTimeout = setTimeout(() => setShowMoon(true), 1000);
-    const nextScene = setTimeout(() => setScene('book_glows'), 3000);
+  // Type out the child's request
+  useEffect(() => {
+    if (scene !== 'request') return;
+
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index <= currentRequest.request.length) {
+        setTypedRequest(currentRequest.request.slice(0, index));
+        index++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => setScene('creating'), 1500);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [scene, currentRequest]);
+
+  // Creating animation phases
+  useEffect(() => {
+    if (scene !== 'creating') return;
+
+    const phases = [1, 2, 3, 4];
+    let phaseIndex = 0;
+
+    // Add sparkles periodically
+    const sparkleInterval = setInterval(() => {
+      const newSparkle = {
+        id: Date.now(),
+        x: 40 + Math.random() * 20,
+        y: 30 + Math.random() * 30,
+      };
+      setSparkles(prev => [...prev.slice(-10), newSparkle]);
+    }, 200);
+
+    const interval = setInterval(() => {
+      if (phaseIndex < phases.length) {
+        setCreatingPhase(phases[phaseIndex]);
+        phaseIndex++;
+      } else {
+        clearInterval(interval);
+        clearInterval(sparkleInterval);
+        setSparkles([]);
+        setTimeout(() => setScene('reveal'), 500);
+      }
+    }, 800);
 
     return () => {
-      clearTimeout(moonTimeout);
-      clearTimeout(nextScene);
+      clearInterval(interval);
+      clearInterval(sparkleInterval);
     };
   }, [scene]);
 
-  // Book starts glowing
+  // Reveal and complete
   useEffect(() => {
-    if (scene !== 'book_glows') return;
-
-    const glowTimeout = setTimeout(() => setBookGlowing(true), 500);
-    const nextScene = setTimeout(() => setScene('dreams'), 2500);
-
-    return () => {
-      clearTimeout(glowTimeout);
-      clearTimeout(nextScene);
-    };
+    if (scene !== 'reveal') return;
+    const timeout = setTimeout(() => {
+      setBooksCreated(c => c + 1);
+      setScene('complete');
+    }, 3000);
+    return () => clearTimeout(timeout);
   }, [scene]);
 
-  // Dreams float up
+  // Move to next request or finish
   useEffect(() => {
-    if (scene !== 'dreams') return;
+    if (scene !== 'complete') return;
+    const timeout = setTimeout(() => {
+      if (currentRequestIndex < BOOK_REQUESTS.length - 1) {
+        setCurrentRequestIndex(i => i + 1);
+        setTypedRequest('');
+        setCreatingPhase(0);
+        setScene('request');
+      }
+      // Stay on complete for the last one
+    }, 2500);
+    return () => clearTimeout(timeout);
+  }, [scene, currentRequestIndex]);
 
-    // Create dream bubbles one by one
-    STORY_ELEMENTS.forEach((element, i) => {
-      setTimeout(() => {
-        setDreamBubbles(prev => [...prev, {
-          id: i,
-          x: 20 + (i * 15),
-          emoji: element.emoji,
-          label: element.label,
-          color: element.color,
-          delay: i * 0.5,
-          popped: false,
-        }]);
-      }, i * 800);
-    });
-
-    const nextScene = setTimeout(() => setScene('story_forms'), 5000);
-    return () => clearTimeout(nextScene);
-  }, [scene]);
-
-  // Story forms from bubbles
-  useEffect(() => {
-    if (scene !== 'story_forms') return;
-
-    const lines = [
-      'Once upon a time...',
-      'in a cozy woodland home,',
-      'there lived a curious little fox.',
-      '',
-      'One magical moonlit night,',
-      'the fox made a wish upon a star.',
-      '',
-      'And with a sprinkle of magic...',
-      'the wish came true.',
-      '',
-      'The End.',
-    ];
-
-    lines.forEach((line, i) => {
-      setTimeout(() => {
-        setStoryLines(prev => [...prev, line]);
-        // Pop a bubble when its element appears in the story
-        if (i < STORY_ELEMENTS.length) {
-          setDreamBubbles(prev =>
-            prev.map((b, j) => j === i ? { ...b, popped: true } : b)
-          );
-        }
-      }, i * 600);
-    });
-
-    const nextScene = setTimeout(() => setScene('goodnight'), 8000);
-    return () => clearTimeout(nextScene);
-  }, [scene]);
-
-  // Goodnight scene
-  useEffect(() => {
-    if (scene !== 'goodnight') return;
-
-    const stealthTimeout = setTimeout(() => setShowStealth(true), 2000);
-    return () => clearTimeout(stealthTimeout);
-  }, [scene]);
-
-  const renderStars = () => (
-    <>
-      {stars.map(star => (
-        <div
-          key={star.id}
-          className="absolute rounded-full bg-white animate-pulse"
-          style={{
-            left: `${star.x}%`,
-            top: `${star.y}%`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            animationDelay: `${star.delay}s`,
-            animationDuration: '2s',
-          }}
-        />
-      ))}
-    </>
-  );
-
-  const renderMoon = () => (
-    <div
-      className={`absolute transition-all duration-1000 ${showMoon ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}
-      style={{ right: '15%', top: '10%' }}
-    >
-      <div className="relative">
-        <div
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-100 to-yellow-200"
-          style={{
-            boxShadow: '0 0 60px rgba(254, 240, 138, 0.6), 0 0 120px rgba(254, 240, 138, 0.3)',
-          }}
-        />
-        {/* Moon craters */}
-        <div className="absolute top-4 left-6 w-4 h-4 rounded-full bg-yellow-300/30" />
-        <div className="absolute top-10 left-12 w-3 h-3 rounded-full bg-yellow-300/20" />
-        <div className="absolute top-14 left-4 w-5 h-5 rounded-full bg-yellow-300/25" />
+  const renderRobot = (speaking: boolean = false) => (
+    <div className="relative">
+      {/* Robot body */}
+      <div className="w-32 h-40 bg-gradient-to-b from-slate-400 to-slate-500 rounded-t-3xl relative">
+        {/* Eyes */}
+        <div className="absolute top-6 left-0 right-0 flex justify-center gap-4">
+          <div className={`w-8 h-8 rounded-full bg-cyan-400 ${speaking ? 'animate-pulse' : ''}`}
+            style={{ boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)' }}>
+            <div className="w-3 h-3 bg-white rounded-full mt-1 ml-1" />
+          </div>
+          <div className={`w-8 h-8 rounded-full bg-cyan-400 ${speaking ? 'animate-pulse' : ''}`}
+            style={{ boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)' }}>
+            <div className="w-3 h-3 bg-white rounded-full mt-1 ml-1" />
+          </div>
+        </div>
+        {/* Mouth/speaker */}
+        <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 w-12 h-4 bg-slate-700 rounded-full flex items-center justify-center gap-1 ${speaking ? 'animate-pulse' : ''}`}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className={`w-2 ${speaking ? 'h-3' : 'h-1'} bg-cyan-400 rounded-full transition-all`} />
+          ))}
+        </div>
+        {/* Antenna */}
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+          <div className="w-1 h-6 bg-slate-600" />
+          <div className={`w-4 h-4 rounded-full bg-red-500 -ml-1.5 ${speaking ? 'animate-ping' : 'animate-pulse'}`} />
+        </div>
+      </div>
+      {/* Arms holding book/paper */}
+      <div className="absolute top-24 -left-8 w-8 h-20 bg-slate-400 rounded-full" />
+      <div className="absolute top-24 -right-8 w-8 h-20 bg-slate-400 rounded-full" />
+      {/* Label */}
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-600 px-3 py-1 rounded text-xs font-mono text-white">
+        LIBR-4R1
       </div>
     </div>
   );
 
-  const renderBedroom = () => (
-    <div className="absolute bottom-0 left-0 right-0 h-1/3">
-      {/* Floor/bed area */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-indigo-950 to-transparent" />
-
-      {/* Nightstand */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-        <div className="w-32 h-20 bg-amber-900 rounded-t-lg relative">
-          {/* Book on nightstand */}
+  const renderBookshelf = () => (
+    <div className="absolute bottom-0 left-0 right-0 h-32 bg-amber-900">
+      <div className="h-4 bg-amber-800" />
+      <div className="flex justify-around items-end h-24 px-4">
+        {/* Existing books on shelf */}
+        {[...Array(booksCreated)].map((_, i) => (
           <div
-            className={`absolute -top-8 left-1/2 -translate-x-1/2 transition-all duration-500 ${bookGlowing ? 'scale-110' : ''}`}
-          >
-            <div
-              className="w-20 h-14 bg-gradient-to-br from-rose-600 to-rose-800 rounded-sm relative"
-              style={{
-                boxShadow: bookGlowing
-                  ? '0 0 30px rgba(251, 113, 133, 0.8), 0 0 60px rgba(251, 113, 133, 0.4)'
-                  : 'none',
-                transform: 'perspective(100px) rotateX(10deg)',
-              }}
-            >
-              {/* Book spine */}
-              <div className="absolute left-0 top-0 bottom-0 w-2 bg-rose-900 rounded-l-sm" />
-              {/* Book title area */}
-              <div className="absolute inset-2 left-4 flex items-center justify-center">
-                <span className="text-rose-200 text-xs">✨📖✨</span>
-              </div>
+            key={i}
+            className="w-8 h-20 rounded-t-sm"
+            style={{
+              background: ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b'][i % 4],
+              transform: `rotate(${Math.random() * 6 - 3}deg)`,
+            }}
+          />
+        ))}
+        {/* Empty spaces */}
+        {[...Array(Math.max(0, 8 - booksCreated))].map((_, i) => (
+          <div key={`empty-${i}`} className="w-8 h-20 opacity-0" />
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderLibrary = () => (
+    <div className="h-full flex flex-col items-center justify-center relative">
+      {/* Library background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-100 to-amber-200" />
+
+      {/* Bookshelves background */}
+      <div className="absolute inset-0 opacity-20">
+        {[...Array(3)].map((_, row) => (
+          <div key={row} className="flex justify-around mt-8">
+            {[...Array(8)].map((_, col) => (
+              <div
+                key={col}
+                className="w-6 h-16 bg-amber-800 rounded-t-sm"
+                style={{ opacity: 0.3 + Math.random() * 0.4 }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div className="relative z-10 text-center">
+        {renderRobot(true)}
+        <div className="mt-8 bg-white/90 rounded-xl px-8 py-4 shadow-lg">
+          <div className="text-amber-800 font-serif text-2xl">
+            ✨ The Story Machine ✨
+          </div>
+          <div className="text-amber-600 text-sm mt-2">
+            "Tell me what book you'd like, and I'll create it!"
+          </div>
+        </div>
+      </div>
+
+      {renderBookshelf()}
+    </div>
+  );
+
+  const renderRequest = () => (
+    <div className="h-full flex flex-col relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-100 to-amber-200" />
+
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8">
+        {/* Child avatar */}
+        <div className="flex items-end gap-8">
+          <div className="text-center">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-b from-amber-300 to-amber-400 flex items-center justify-center text-4xl mb-2">
+              👧
             </div>
-            {bookGlowing && (
-              <div className="absolute -inset-4 animate-pulse">
-                <div className="w-full h-full rounded-full bg-rose-400/20 blur-xl" />
+            <div className="font-serif text-amber-800">{currentRequest.childName}</div>
+          </div>
+
+          {/* Speech bubble */}
+          <div className="relative bg-white rounded-2xl px-6 py-4 shadow-lg max-w-md">
+            <div className="absolute -left-4 bottom-4 w-0 h-0 border-t-[10px] border-t-transparent border-r-[20px] border-r-white border-b-[10px] border-b-transparent" />
+            <div className="font-serif text-amber-900 text-lg">
+              "{typedRequest}"
+              <span className="animate-pulse">|</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Robot listening */}
+        <div className="mt-12">
+          {renderRobot(typedRequest.length > 0)}
+        </div>
+      </div>
+
+      {renderBookshelf()}
+    </div>
+  );
+
+  const renderCreating = () => (
+    <div className="h-full flex flex-col relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900 to-indigo-950" />
+
+      {/* Sparkles */}
+      {sparkles.map(sparkle => (
+        <div
+          key={sparkle.id}
+          className="absolute text-2xl animate-ping"
+          style={{ left: `${sparkle.x}%`, top: `${sparkle.y}%` }}
+        >
+          ✨
+        </div>
+      ))}
+
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
+        {/* Robot working */}
+        <div className="mb-8">
+          {renderRobot(true)}
+        </div>
+
+        {/* Transformation animation */}
+        <div className="relative w-48 h-64">
+          {/* Blank paper transforming into book */}
+          <div
+            className={`absolute inset-0 bg-white rounded-lg shadow-2xl transition-all duration-500 ${
+              creatingPhase >= 1 ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              transform: creatingPhase >= 2 ? 'rotateY(10deg)' : 'rotateY(0deg)',
+              boxShadow: creatingPhase >= 3 ? '0 0 60px rgba(168, 85, 247, 0.8)' : '0 0 20px rgba(255,255,255,0.3)',
+            }}
+          >
+            {/* Text appearing */}
+            {creatingPhase >= 2 && (
+              <div className="p-4 font-serif text-slate-400 text-sm animate-pulse">
+                {creatingPhase >= 3 && (
+                  <>
+                    <div className="h-2 bg-slate-300 rounded mb-2 w-3/4" />
+                    <div className="h-2 bg-slate-300 rounded mb-2 w-full" />
+                    <div className="h-2 bg-slate-300 rounded mb-2 w-5/6" />
+                  </>
+                )}
+              </div>
+            )}
+            {/* Cover forming */}
+            {creatingPhase >= 4 && (
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="text-6xl">{currentRequest.bookCover}</div>
               </div>
             )}
           </div>
         </div>
-        {/* Nightstand legs */}
-        <div className="flex justify-between px-2">
-          <div className="w-3 h-8 bg-amber-800" />
-          <div className="w-3 h-8 bg-amber-800" />
+
+        {/* Status text */}
+        <div className="mt-8 text-white font-mono text-center">
+          {creatingPhase === 1 && 'Preparing blank pages...'}
+          {creatingPhase === 2 && 'Writing story...'}
+          {creatingPhase === 3 && 'Creating illustrations...'}
+          {creatingPhase === 4 && 'Binding book...'}
         </div>
       </div>
     </div>
   );
 
-  const renderDreamBubbles = () => (
-    <>
-      {dreamBubbles.map(bubble => (
+  const renderReveal = () => (
+    <div className="h-full flex flex-col relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-100 to-amber-200" />
+
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8">
+        {/* The completed book */}
         <div
-          key={bubble.id}
-          className={`absolute transition-all duration-1000 ${bubble.popped ? 'opacity-0 scale-150' : 'opacity-100'}`}
+          className="relative w-56 h-72 rounded-lg shadow-2xl transform hover:scale-105 transition-transform animate-bounce"
           style={{
-            left: `${bubble.x}%`,
-            bottom: '35%',
-            animation: bubble.popped ? 'none' : `float 3s ease-in-out infinite`,
-            animationDelay: `${bubble.delay}s`,
+            background: 'linear-gradient(135deg, #f43f5e, #a855f7)',
+            boxShadow: '0 0 40px rgba(168, 85, 247, 0.5)',
           }}
         >
-          <div
-            className={`w-20 h-20 rounded-full bg-gradient-to-br ${bubble.color} flex items-center justify-center relative`}
-            style={{
-              boxShadow: '0 0 20px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.2)',
-            }}
-          >
-            <span className="text-3xl">{bubble.emoji}</span>
-            {/* Bubble shine */}
-            <div className="absolute top-2 left-3 w-3 h-3 rounded-full bg-white/40" />
-          </div>
-          <div className="text-center mt-2 text-white/80 text-xs font-serif max-w-24">
-            {bubble.label}
+          {/* Book spine effect */}
+          <div className="absolute left-0 top-0 bottom-0 w-4 bg-black/20 rounded-l-lg" />
+
+          {/* Cover content */}
+          <div className="flex flex-col items-center justify-center h-full text-white">
+            <div className="text-6xl mb-4">{currentRequest.bookCover}</div>
+            <div className="text-xl font-bold text-center px-4 font-serif">
+              {currentRequest.bookTitle}
+            </div>
           </div>
         </div>
-      ))}
-    </>
-  );
 
-  const renderStoryText = () => (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div
-        className="bg-amber-50/95 rounded-lg p-8 max-w-md mx-4 shadow-2xl"
-        style={{
-          boxShadow: '0 0 40px rgba(251, 191, 36, 0.3)',
-        }}
-      >
-        <div className="font-serif text-amber-900 text-lg leading-relaxed text-center">
-          {storyLines.map((line, i) => (
-            <div
-              key={i}
-              className={`transition-opacity duration-500 ${line === '' ? 'h-4' : ''}`}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              {line}
-            </div>
-          ))}
+        {/* Preview snippet */}
+        <div className="mt-8 bg-white/90 rounded-xl px-6 py-4 shadow-lg max-w-md">
+          <div className="text-amber-800 font-serif italic">
+            "{currentRequest.storyPreview}"
+          </div>
+        </div>
+
+        {/* Robot presenting */}
+        <div className="mt-4 flex items-center gap-4">
+          <div className="text-4xl">🤖</div>
+          <div className="bg-cyan-100 rounded-xl px-4 py-2 text-cyan-800 font-mono text-sm">
+            "Here you go, {currentRequest.childName}!"
+          </div>
         </div>
       </div>
+
+      {renderBookshelf()}
     </div>
   );
 
-  const renderGoodnight = () => (
-    <div className="absolute inset-0 flex flex-col items-center justify-center">
-      <div className="text-center space-y-8">
-        <div className="text-6xl">🌙</div>
+  const renderComplete = () => (
+    <div className="h-full flex flex-col relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-100 to-amber-200" />
 
-        <div className="font-serif text-amber-200 text-4xl">
-          Goodnight...
-        </div>
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
+        {renderRobot(false)}
 
-        <div className="font-serif text-amber-100/60 text-xl">
-          Sweet dreams await
-        </div>
-
-        {showStealth && (
-          <div className="mt-12 space-y-4 animate-pulse">
-            <div className="text-purple-300/80 font-mono text-sm">
-              🔮 PROJECT IN STEALTH MODE
-            </div>
-            <div className="text-purple-400/60 font-mono text-xs">
-              More stories coming soon...
-            </div>
+        <div className="mt-8 text-center">
+          <div className="text-6xl mb-4">📚</div>
+          <div className="text-amber-800 font-serif text-2xl mb-2">
+            Books Created: {booksCreated}
           </div>
-        )}
+          {currentRequestIndex >= BOOK_REQUESTS.length - 1 && (
+            <>
+              <div className="text-amber-600 font-serif mt-4">
+                Every child's imagination deserves a story.
+              </div>
+              <div className="mt-8 space-y-2">
+                <div className="text-purple-600 font-mono text-sm">
+                  🔮 PROJECT IN STEALTH MODE
+                </div>
+                <div className="text-purple-400 font-mono text-xs">
+                  More stories coming soon...
+                </div>
+              </div>
+            </>
+          )}
+          {currentRequestIndex < BOOK_REQUESTS.length - 1 && (
+            <div className="text-amber-500 text-sm animate-pulse mt-4">
+              Next request incoming...
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Floating Zs */}
-      <div className="absolute right-1/4 top-1/3 text-4xl text-blue-300/40 animate-bounce" style={{ animationDelay: '0s' }}>
-        z
-      </div>
-      <div className="absolute right-1/4 top-1/4 text-3xl text-blue-300/30 animate-bounce" style={{ animationDelay: '0.5s' }}>
-        z
-      </div>
-      <div className="absolute right-1/5 top-1/5 text-2xl text-blue-300/20 animate-bounce" style={{ animationDelay: '1s' }}>
-        z
-      </div>
+      {renderBookshelf()}
     </div>
   );
+
+  const renderScene = () => {
+    switch (scene) {
+      case 'library':
+        return renderLibrary();
+      case 'request':
+        return renderRequest();
+      case 'creating':
+        return renderCreating();
+      case 'reveal':
+        return renderReveal();
+      case 'complete':
+        return renderComplete();
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-indigo-950 via-purple-950 to-slate-950">
-      {/* Stars */}
-      {renderStars()}
-
-      {/* Moon */}
-      {renderMoon()}
-
-      {/* Dream bubbles */}
-      {(scene === 'dreams' || scene === 'story_forms') && renderDreamBubbles()}
-
-      {/* Story text overlay */}
-      {scene === 'story_forms' && storyLines.length > 0 && renderStoryText()}
-
-      {/* Bedroom/nightstand */}
-      {scene !== 'goodnight' && renderBedroom()}
-
-      {/* Goodnight scene */}
-      {scene === 'goodnight' && renderGoodnight()}
-
-      {/* Ambient glow from bottom */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at bottom, rgba(99, 102, 241, 0.1) 0%, transparent 70%)',
-        }}
-      />
-
-      <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0) rotate(-2deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(2deg);
-          }
-        }
-      `}</style>
+    <div className="relative w-full h-full overflow-hidden">
+      {renderScene()}
     </div>
   );
 };
