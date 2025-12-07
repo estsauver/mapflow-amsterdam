@@ -36,8 +36,8 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
             </p>
 
             <p>
-              When I'm not working, I'm probably making maps, tinkering with side projects,
-              or getting lost in a good dataset.
+              When I'm not working, I'm hopefully enjoying a nice bike ride or spending
+              time in the outdoors.
             </p>
 
           </DialogDescription>
