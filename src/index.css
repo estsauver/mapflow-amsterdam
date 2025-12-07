@@ -75,6 +75,49 @@
   .animate-slide-up {
     animation: slideUp 0.5s ease-out forwards;
   }
+
+  /* Retro game pixel art utilities */
+  .pixel-art {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .crisp-edges {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    shape-rendering: crispEdges;
+  }
+
+  .pixel-sprite {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .retro-text {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.05em;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .crt-flicker {
+    animation: crtFlicker 0.15s infinite;
+  }
+
+  .scanlines {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.1) 0px,
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  }
+}
+
+@keyframes crtFlicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1; }
+  100% { opacity: 0.98; }
 }
 
 @keyframes fadeIn {
