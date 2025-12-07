@@ -142,7 +142,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
             My Projects
           </h2>
           <p className="text-sm text-slate-400" style={{ fontFamily: 'monospace' }}>
-            This site is best experienced on desktop, where you can explore interactive demos of each project.
+            This site is best experienced on desktop, where I've made it look real pretty, but here's basically the same info without the flair.
           </p>
         </div>
 
