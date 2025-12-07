@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -64,13 +64,31 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   const currentProject = PROJECTS[currentProjectIndex];
 
-  const goToPrevProject = () => {
+  const goToPrevProject = useCallback(() => {
     setCurrentProjectIndex((prev) => (prev > 0 ? prev - 1 : PROJECTS.length - 1));
-  };
+  }, []);
 
-  const goToNextProject = () => {
+  const goToNextProject = useCallback(() => {
     setCurrentProjectIndex((prev) => (prev < PROJECTS.length - 1 ? prev + 1 : 0));
-  };
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevProject();
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextProject();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, goToPrevProject, goToNextProject]);
 
   const renderProjectGame = () => {
     switch (currentProject.id) {
@@ -164,7 +182,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
               {currentProject.description}
             </p>
             <div className="mt-3 text-xs text-slate-600">
-              Use ▲▼ to browse projects
+              Use ▲▼ or arrow keys to browse
             </div>
           </div>
 
