@@ -51,7 +51,7 @@ const AmsterdamMap = () => {
   const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[0]);
   const [isVisible, setIsVisible] = useState(true);
 
-  const flyToLocation = (index: number) => {
+  const flyToLocation = (index: number, fast: boolean = false) => {
     if (!mapInstance.current) return;
 
     // Cancel any pending animation timeout
@@ -70,31 +70,31 @@ const AmsterdamMap = () => {
       center: nextLocation.coordinates,
       zoom: nextLocation.zoom,
       curve: 1.42,
-      speed: 0.05,
+      speed: fast ? 1.2 : 0.05,
       easing(t) {
         return t;
       }
     });
   };
 
-  const flyToNextLocation = () => {
+  const flyToNextLocation = (fast: boolean = false) => {
     const nextIndex = (currentLocationIndex.current + 1) % LOCATIONS.length;
-    flyToLocation(nextIndex);
+    flyToLocation(nextIndex, fast);
   };
 
-  const flyToPreviousLocation = () => {
+  const flyToPreviousLocation = (fast: boolean = false) => {
     const prevIndex = (currentLocationIndex.current - 1 + LOCATIONS.length) % LOCATIONS.length;
-    flyToLocation(prevIndex);
+    flyToLocation(prevIndex, fast);
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         autoAdvance.current = false;
-        flyToNextLocation();
+        flyToNextLocation(true);
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         autoAdvance.current = false;
-        flyToPreviousLocation();
+        flyToPreviousLocation(true);
       }
     };
 
