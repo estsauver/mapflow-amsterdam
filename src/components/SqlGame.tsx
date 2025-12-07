@@ -178,10 +178,10 @@ const SqlGame: React.FC = () => {
         {introText.map((line, i) => (
           <div
             key={i}
-            className={`${line.startsWith('>') ? 'text-cyan-400' : 'text-white'} ${line === '' ? 'h-4' : ''}`}
+            className={`${line?.startsWith('>') ? 'text-cyan-400' : 'text-white'} ${line === '' ? 'h-4' : ''}`}
             style={{ textShadow: '0 0 10px currentColor' }}
           >
-            {line}
+            {line || ''}
           </div>
         ))}
       </div>
