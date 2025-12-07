@@ -19,6 +19,11 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
         <DialogHeader className="space-y-4">
           <DialogTitle className="font-beth-ellen text-2xl">About Me</DialogTitle>
           <DialogDescription className="space-y-4 text-lg">
+            <img
+              src="/earl.jpeg"
+              alt="Earl St Sauver"
+              className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
+            />
             <p>
               I'm Earl St Sauver. I build things that matter with people I admire.
             </p>
