@@ -12,12 +12,32 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Open projects dialog when URL matches /projects or /projects/:id
+  // Open dialogs when URL matches
   useEffect(() => {
-    if (location.pathname.startsWith('/projects')) {
+    if (location.pathname === '/about') {
+      setAboutOpen(true);
+    } else if (location.pathname === '/contact') {
+      setContactOpen(true);
+    } else if (location.pathname.startsWith('/projects')) {
       setProjectsOpen(true);
     }
   }, [location.pathname]);
+
+  // Handle about dialog close - navigate back to home
+  const handleAboutOpenChange = (open: boolean) => {
+    setAboutOpen(open);
+    if (!open && location.pathname === '/about') {
+      navigate('/');
+    }
+  };
+
+  // Handle contact dialog close - navigate back to home
+  const handleContactOpenChange = (open: boolean) => {
+    setContactOpen(open);
+    if (!open && location.pathname === '/contact') {
+      navigate('/');
+    }
+  };
 
   // Handle projects dialog close - navigate back to home
   const handleProjectsOpenChange = (open: boolean) => {
@@ -27,7 +47,15 @@ const Navigation = () => {
     }
   };
 
-  // Handle opening projects - navigate to /projects
+  // Handle opening dialogs - navigate to route
+  const handleOpenAbout = () => {
+    navigate('/about');
+  };
+
+  const handleOpenContact = () => {
+    navigate('/contact');
+  };
+
   const handleOpenProjects = () => {
     navigate('/projects');
   };
@@ -44,7 +72,7 @@ const Navigation = () => {
           <ul className="space-y-2">
             <li>
               <button
-                onClick={() => setAboutOpen(true)}
+                onClick={handleOpenAbout}
                 className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
               >
                 About
@@ -60,7 +88,7 @@ const Navigation = () => {
             </li>
             <li>
               <button
-                onClick={() => setContactOpen(true)}
+                onClick={handleOpenContact}
                 className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
               >
                 Contact
@@ -69,9 +97,9 @@ const Navigation = () => {
           </ul>
         </div>
       </nav>
-      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+      <AboutDialog open={aboutOpen} onOpenChange={handleAboutOpenChange} />
       <ProjectsDialog open={projectsOpen} onOpenChange={handleProjectsOpenChange} />
-      <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
+      <ContactDialog open={contactOpen} onOpenChange={handleContactOpenChange} />
     </>
   );
 };
