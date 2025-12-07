@@ -389,7 +389,7 @@ const StorybookGame: React.FC = () => {
               </div>
               <div className="mt-8 space-y-2">
                 <div className="text-purple-600 font-mono text-sm">
-                  🔮 PROJECT IN STEALTH MODE
+                  📖 PROJECT UNNAMED
                 </div>
                 <div className="text-purple-400 font-mono text-xs">
                   More stories coming soon...

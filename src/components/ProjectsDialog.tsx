@@ -54,7 +54,7 @@ const PROJECTS: Project[] = [
   },
   {
     id: 'childrens',
-    name: "(Stealth) Children's Book Publisher",
+    name: "(Unnamed) Children's Book Publisher",
     description: 'Creating magical bedtime stories with AI-generated tales and illustrations.',
     hasGame: true,
   },
