@@ -20,19 +20,26 @@ const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
           <DialogTitle className="font-beth-ellen text-2xl">About Me</DialogTitle>
           <DialogDescription className="space-y-4 text-lg">
             <p>
-              Hi, I'm Earl St Sauver, enthusiastic geek and reluctant executive.
-            </p>
-            
-            <p>
-              I'm a deep believer that humanity's greatest leverage lies where others won't tread. 
-              I've always liked problems that feel impossible, but am trying to reform myself now that I have children.
+              I'm Earl St Sauver. I build things that matter with people I admire.
             </p>
 
             <p>
-              I started Apollo Agriculture with Eli and Ben to bring modern farming to everyone. 
-              I wanted to clear the bottom level of Maslow's hierarchy of needs in our lifetime, for everyone.
+              I co-founded Apollo Agriculture because I believe everyone deserves access to
+              the tools that help farmers thrive. With Eli and Ben, we set out to make
+              modern agriculture accessible to smallholder farmers across Africa.
             </p>
-            
+
+            <p>
+              I'm drawn to problems at the edges—the ones that seem impossible until someone
+              actually tries. Though these days, with kids in the picture, I'm learning that
+              some of the best problems to solve are closer to home.
+            </p>
+
+            <p>
+              When I'm not working, I'm probably making maps, tinkering with side projects,
+              or getting lost in a good dataset.
+            </p>
+
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
