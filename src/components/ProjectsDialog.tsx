@@ -7,6 +7,7 @@ import FarmingGame from './FarmingGame';
 import EstimatorGame from './EstimatorGame';
 import SqlGame from './SqlGame';
 import SpotlightGame from './SpotlightGame';
+import StorybookGame from './StorybookGame';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -54,8 +55,8 @@ const PROJECTS: Project[] = [
   {
     id: 'childrens',
     name: "(Stealth) Children's Book Publisher",
-    description: 'Publishing children\'s books using AI generated stories and images.',
-    hasGame: false,
+    description: 'Creating magical bedtime stories with AI-generated tales and illustrations.',
+    hasGame: true,
   },
 ];
 
@@ -81,6 +82,8 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
         return <SqlGame />;
       case 'dspy':
         return <SpotlightGame />;
+      case 'childrens':
+        return <StorybookGame />;
       default:
         // Coming soon placeholder for other projects
         return (
