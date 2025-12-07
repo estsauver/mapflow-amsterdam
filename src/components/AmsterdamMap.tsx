@@ -7,6 +7,7 @@ type Location = {
   caption: string;
   coordinates: [number, number];
   zoom: number;
+  videoUrl?: string;
 };
 
 const LOCATIONS: Location[] = [
@@ -45,11 +46,14 @@ const LOCATIONS: Location[] = [
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const currentLocationIndex = useRef<number>(1);
   const isAnimating = useRef<boolean>(false);
   const autoAdvance = useRef<boolean>(true);
   const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[1]);
   const [isVisible, setIsVisible] = useState(true);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
 
   const flyToLocation = (index: number, fast: boolean = false) => {
     if (!mapInstance.current) return;
@@ -57,6 +61,8 @@ const AmsterdamMap = () => {
     // Cancel any pending animation timeout
     isAnimating.current = true;
     setIsVisible(false);
+    setIsVideoVisible(false);
+    setIsVideoPlaying(false);
 
     currentLocationIndex.current = index;
     const nextLocation = LOCATIONS[index];
@@ -77,6 +83,34 @@ const AmsterdamMap = () => {
     });
   };
 
+  const startVideo = () => {
+    const location = LOCATIONS[currentLocationIndex.current];
+    if (location.videoUrl && videoRef.current) {
+      setIsVideoPlaying(true);
+      // Small delay before showing video for fade-in effect
+      setTimeout(() => {
+        setIsVideoVisible(true);
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.play().catch(console.error);
+        }
+      }, 100);
+    } else if (autoAdvance.current) {
+      // No video, advance after a short delay
+      setTimeout(() => flyToNextLocation(), 3000);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    setIsVideoVisible(false);
+    setTimeout(() => {
+      setIsVideoPlaying(false);
+      if (autoAdvance.current) {
+        flyToNextLocation();
+      }
+    }, 500);
+  };
+
   const flyToNextLocation = (fast: boolean = false) => {
     const nextIndex = (currentLocationIndex.current + 1) % LOCATIONS.length;
     flyToLocation(nextIndex, fast);
@@ -91,9 +125,21 @@ const AmsterdamMap = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         autoAdvance.current = false;
+        // Stop any playing video
+        if (videoRef.current) {
+          videoRef.current.pause();
+        }
+        setIsVideoVisible(false);
+        setIsVideoPlaying(false);
         flyToNextLocation(true);
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         autoAdvance.current = false;
+        // Stop any playing video
+        if (videoRef.current) {
+          videoRef.current.pause();
+        }
+        setIsVideoVisible(false);
+        setIsVideoPlaying(false);
         flyToPreviousLocation(true);
       }
     };
@@ -131,9 +177,10 @@ const AmsterdamMap = () => {
     });
 
     mapInstance.current.on('idle', () => {
-      isAnimating.current = false;
-      if (autoAdvance.current) {
-        flyToNextLocation();
+      if (isAnimating.current) {
+        isAnimating.current = false;
+        // Start video playback when map finishes flying to location
+        startVideo();
       }
     });
 
@@ -152,10 +199,28 @@ const AmsterdamMap = () => {
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none" />
 
+      {/* Video overlay */}
+      {isVideoPlaying && currentLocation.videoUrl && (
+        <div
+          className={`absolute inset-0 z-20 flex items-center justify-center bg-black/80 transition-opacity duration-500 ${
+            isVideoVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <video
+            ref={videoRef}
+            src={currentLocation.videoUrl}
+            className="max-w-[90vw] max-h-[80vh] rounded-lg shadow-2xl"
+            onEnded={handleVideoEnded}
+            playsInline
+            muted={false}
+          />
+        </div>
+      )}
+
       {/* Location caption */}
       <div
         className={`absolute bottom-8 left-8 z-10 transition-opacity duration-500 ease-in-out ${
-          isVisible ? 'opacity-100' : 'opacity-0'
+          isVisible && !isVideoVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="glass-panel px-6 py-4 max-w-md">
