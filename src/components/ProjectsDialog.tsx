@@ -6,6 +6,7 @@ import {
 import FarmingGame from './FarmingGame';
 import EstimatorGame from './EstimatorGame';
 import SqlGame from './SqlGame';
+import SpotlightGame from './SpotlightGame';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -46,8 +47,8 @@ const PROJECTS: Project[] = [
   {
     id: 'dspy',
     name: 'dspy-spotlight',
-    description: 'LLM sanitization tooling for DSPy.',
-    hasGame: false,
+    description: 'Prompt injection detection for DSPy - finding the double agents hiding in your inputs.',
+    hasGame: true,
     link: 'https://github.com/estsauver/dspy-spotlight',
   },
   {
@@ -78,6 +79,8 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
         return <EstimatorGame />;
       case 'nosql':
         return <SqlGame />;
+      case 'dspy':
+        return <SpotlightGame />;
       default:
         // Coming soon placeholder for other projects
         return (
