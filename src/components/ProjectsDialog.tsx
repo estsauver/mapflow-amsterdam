@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -62,17 +63,64 @@ const PROJECTS: Project[] = [
 ];
 
 const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
-  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get initial index from URL or default to 0
+  const getInitialIndex = () => {
+    if (projectId) {
+      const index = PROJECTS.findIndex(p => p.id === projectId);
+      return index >= 0 ? index : 0;
+    }
+    return 0;
+  };
+
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(getInitialIndex);
   const currentProject = PROJECTS[currentProjectIndex];
   const isMobile = useIsMobile();
 
+  // Sync state with URL when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      const index = PROJECTS.findIndex(p => p.id === projectId);
+      if (index >= 0 && index !== currentProjectIndex) {
+        setCurrentProjectIndex(index);
+      }
+    }
+  }, [projectId]);
+
+  // Update URL when project changes
+  const updateUrl = useCallback((index: number) => {
+    const project = PROJECTS[index];
+    if (location.pathname.startsWith('/projects')) {
+      navigate(`/projects/${project.id}`, { replace: true });
+    }
+  }, [navigate, location.pathname]);
+
   const goToPrevProject = useCallback(() => {
-    setCurrentProjectIndex((prev) => (prev > 0 ? prev - 1 : PROJECTS.length - 1));
-  }, []);
+    const newIndex = currentProjectIndex > 0 ? currentProjectIndex - 1 : PROJECTS.length - 1;
+    setCurrentProjectIndex(newIndex);
+    updateUrl(newIndex);
+  }, [currentProjectIndex, updateUrl]);
 
   const goToNextProject = useCallback(() => {
-    setCurrentProjectIndex((prev) => (prev < PROJECTS.length - 1 ? prev + 1 : 0));
-  }, []);
+    const newIndex = currentProjectIndex < PROJECTS.length - 1 ? currentProjectIndex + 1 : 0;
+    setCurrentProjectIndex(newIndex);
+    updateUrl(newIndex);
+  }, [currentProjectIndex, updateUrl]);
+
+  const goToProject = useCallback((index: number) => {
+    setCurrentProjectIndex(index);
+    updateUrl(index);
+  }, [updateUrl]);
+
+  // Update URL when dialog opens (if not already on a specific project)
+  useEffect(() => {
+    if (open && location.pathname === '/projects') {
+      navigate(`/projects/${PROJECTS[currentProjectIndex].id}`, { replace: true });
+    }
+  }, [open, location.pathname, currentProjectIndex, navigate]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -243,7 +291,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
               {PROJECTS.map((project, index) => (
                 <button
                   key={project.id}
-                  onClick={() => setCurrentProjectIndex(index)}
+                  onClick={() => goToProject(index)}
                   className={`w-3 h-3 rounded-full transition-colors ${
                     index === currentProjectIndex
                       ? 'bg-green-500'
