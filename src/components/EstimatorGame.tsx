@@ -375,9 +375,6 @@ const EstimatorGame: React.FC = () => {
         <div className="text-green-800">
           2025
         </div>
-        <div className="text-green-900 text-xs mt-2">
-          (a fictional project)
-        </div>
 
         <div className="mt-8 text-green-700 text-xs max-w-md leading-relaxed">
           <p>
