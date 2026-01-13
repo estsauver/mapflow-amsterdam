@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import AboutDialog from './AboutDialog';
 import ProjectsDialog from './ProjectsDialog';
 import ContactDialog from './ContactDialog';
@@ -41,6 +42,14 @@ const Navigation = () => {
               >
                 Contact
               </button>
+            </li>
+            <li>
+              <Link
+                to="/blog"
+                className="block w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
+              >
+                Blog
+              </Link>
             </li>
           </ul>
         </div>

@@ -1,0 +1,24 @@
+IMAGE PROMPT: Claude Code Parallel Sessions Hero Image
+
+Style: Clean, technical illustration with a dark slate/navy background. Modern SaaS aesthetic with subtle gradients. Minimalist but detailed. Color palette: deep blues, amber/gold accents, green for healthy status.
+
+Composition:
+- Three terminal windows arranged in a slight fan/cascade, each representing a Claude Code session
+- Each terminal has the classic red/yellow/green window dots in the header
+- Terminal 1 labeled "main" - shows green status indicators
+- Terminal 2 labeled "earl-fib-123-feature" - shows green status indicators
+- Terminal 3 labeled "experiment-refactor" - shows amber status (in progress)
+
+Below each terminal, show a simplified "isolation bubble":
+- Each bubble contains small icons for: database cylinder, server rack, network nodes
+- Bubbles are clearly separated with subtle glow effects
+- Dotted lines show each terminal connects ONLY to its own bubble
+
+Visual metaphor: Parallel universes or separate sandboxes, each self-contained
+
+Text overlay (optional): "Three Claudes. Three environments. Zero conflicts."
+
+Aspect ratio: 16:9 (blog header)
+Resolution: High quality for retina displays
+
+Mood: Professional, technical, slightly futuristic but grounded. Not cartoonish. The kind of diagram you'd see in quality engineering documentation.

@@ -1,0 +1,39 @@
+IMAGE PROMPT: OpenTelemetry Observability Flow Diagram
+
+Style: Data flow / pipeline diagram. Dark background. Glowing data streams. Color palette: multiple distinct colors for different worktree data streams converging into unified observability.
+
+Layout: Many-to-one flow pattern (fan-in)
+
+LEFT SIDE - Multiple Worktree Sources:
+- Three vertical stacks representing worktree namespaces
+- Stack 1: "worktree-main" - blue/cyan glow
+- Stack 2: "worktree-feature-a" - purple/magenta glow
+- Stack 3: "worktree-feature-b" - green glow
+- Each stack shows small icons: logs (document), metrics (chart), traces (connected dots)
+
+CENTER - OpenTelemetry Collector:
+- Large funnel or collector icon
+- Labeled "OTel Collector"
+- Shows all three colored streams flowing INTO it
+- Amber/gold accent color
+- Located in "infra" namespace (label it)
+
+RIGHT SIDE - Observability Backends (fan-out from collector):
+- Three destination boxes arranged vertically:
+  1. Grafana (dashboard icon) - for logs via Loki, metrics via Prometheus
+  2. Jaeger (trace icon) - for distributed traces
+  3. Prometheus (graph icon) - for metrics
+- All in the infra namespace
+
+DATA FLOW VISUALIZATION:
+- Colored streams (matching source colors) flow from left to center
+- In the collector, streams merge/process
+- Output streams fan out to the three backends
+- Show that data retains its namespace label (small tags on streams)
+
+Key visual concept: "Many isolated sources → One unified view"
+
+Small callout box: "Filter by namespace in Grafana to see just your worktree"
+
+Aspect ratio: 16:9
+Style note: Should feel like a modern data pipeline diagram, not a boring enterprise architecture diagram

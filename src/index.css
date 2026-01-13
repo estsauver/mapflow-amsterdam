@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Beth+Ellen&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Beth+Ellen&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -138,4 +138,21 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Remove green line separators in code blocks */
+.prose pre code span {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.prose pre code .linenumber {
+  display: none !important;
+}
+
+/* Ensure no borders on syntax highlighter elements */
+[class*="language-"] span {
+  border: none !important;
+  border-bottom: none !important;
+  text-decoration: none !important;
 }

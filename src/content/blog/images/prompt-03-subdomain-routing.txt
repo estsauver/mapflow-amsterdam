@@ -1,0 +1,37 @@
+IMAGE PROMPT: Subdomain Routing Flow Diagram
+
+Style: Clean network/routing diagram. Dark slate background. Flowing lines showing request routing. Color palette: white/light gray for URLs, amber for Traefik router, cyan/teal for destination namespaces.
+
+Layout: Left to right flow
+
+LEFT SIDE - Browser/Request Origins:
+- Two browser window icons stacked vertically
+- Browser 1 shows URL bar: "main.localhost"
+- Browser 2 shows URL bar: "earl-fib-123-feature.localhost"
+
+CENTER - Traefik Ingress Router:
+- Hexagonal or rounded rectangle shape
+- Labeled "Traefik" with small logo suggestion
+- Amber/gold color with subtle glow
+- Shows it's the central routing point
+- Small text: "*.localhost → namespace"
+
+RIGHT SIDE - Kubernetes Namespaces:
+- Two rounded rectangles (namespace boxes)
+- Box 1: "worktree-main" containing frontend + backend icons
+- Box 2: "worktree-earl-fib-123-feature" containing frontend + backend icons
+- Cyan/teal color scheme
+
+FLOW LINES:
+- Animated-looking flow lines (dashed or with arrow markers)
+- Line from Browser 1 → Traefik → worktree-main (one color)
+- Line from Browser 2 → Traefik → worktree-earl-fib-123-feature (different shade)
+- Lines should cross through Traefik, showing it as the routing decision point
+
+Additional detail inside namespace boxes:
+- Show path routing: "/" → frontend, "/api" → backend
+- Small icons for the services
+
+Mood: Technical but accessible. Like a diagram from good infrastructure documentation.
+
+Aspect ratio: 16:9 (wider than tall to show the flow)

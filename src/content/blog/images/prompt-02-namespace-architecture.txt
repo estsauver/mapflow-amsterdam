@@ -1,0 +1,41 @@
+IMAGE PROMPT: Kubernetes Namespace Architecture Diagram
+
+Style: Clean technical architecture diagram. Dark background (slate-900). Crisp lines and boxes. Color coding: amber/gold for shared infra, cyan/teal for isolated worktrees.
+
+Layout: Top-down hierarchy
+
+TOP LAYER - Single box labeled "infra/" in amber/gold:
+- Contains icons/small boxes for:
+  - PostgreSQL (database cylinder icon)
+  - Temporal Server (workflow/clock icon)
+  - Grafana + Prometheus + Jaeger + Loki (monitoring dashboard icon)
+  - OpenTelemetry Collector (funnel/collector icon)
+- Label: "(shared)"
+- Subtle glow effect to show it's the central hub
+
+BOTTOM LAYER - Two boxes side by side in cyan/teal:
+- Box 1: "worktree-main/"
+  - Contains: frontend, backend, temporal-worker icons
+  - Label: "(isolated)"
+
+- Box 2: "worktree-earl-fib-123-feature/"
+  - Contains: frontend, backend, temporal-worker icons
+  - Label: "(isolated)"
+
+CONNECTIONS:
+- Thin dotted lines from each worktree box UP to the infra box
+- Lines should indicate "connects to shared services"
+- Arrow pointing from worktrees to infra (telemetry/data flow)
+- Arrow pointing from infra to worktrees (database/service access)
+
+Visual hierarchy:
+- Infra box is slightly larger and more prominent
+- Worktree boxes are equal size, clearly separated
+- Space between worktree boxes emphasizes isolation
+
+Legend (small, bottom corner):
+- Amber = Shared (runs once)
+- Cyan = Isolated (cloned per branch)
+
+Aspect ratio: 4:3 or 16:9
+No text other than labels. Icons should be simple geometric shapes.
