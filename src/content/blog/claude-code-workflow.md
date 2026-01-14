@@ -7,9 +7,7 @@ slug: "claude-code-workflow"
 
 Most AI coding content focuses on the wow moments—the first draft, the speed, the magic. But I've found the real leverage comes from solving the boring problems: how do you actually run multiple Claude sessions without them stepping on each other? How do you give each one a real environment to work in?
 
-Here is something that actually changed how I work: things that were too annoying to bother with are now worth doing.
-
-It's less about "AI writes my code"—it's been writing my code for a while—and more about setting up a really phenomenal dev environment with great isolation. I used to avoid this because it was a multi-day yak-shave. Now I have it, because Claude can write Helm charts while I focus on the actual problem.
+It's less about "AI writes my code"—it's been writing my code for a while—and more about setting up a dev environment with great isolation. I used to avoid this because it was a multi-day yak-shave. Now I have it, because Claude can write Helm charts while I focus on the actual problem.
 
 This post is about running multiple Claude Code sessions in parallel, each in its own fully isolated environment. It required solving real infrastructure problems, and the interesting part is that solving them became tractable when I could hand the tedious parts to Claude.
 
@@ -92,7 +90,7 @@ Error: listen EADDRINUSE: address already in use :::3000
 
 Two worktrees. Both want port 3000. One wins, one loses, and now you are playing "which terminal is running what?"
 
-Annoying, but survivable. Look up how to configure where it's listening—maybe it's `PORT`, maybe it's `PORTO` if they like sweet wine or are thinking about when they can next make a pastel de nata. `PORT=3001 npm run dev`. Fine.
+Annoying, but survivable. Look up how to configure where it's listening—maybe it's `PORT`, maybe it's `PORTO` if they like sweet wine. `PORT=3001 npm run dev`. Fine.
 
 Then you hit the database. And then the filesystem. Or a cache. Or an object store. Or a background worker.
 
@@ -152,7 +150,7 @@ get_current_worktree() {
 
 `earl/FIB-123-new-feature` becomes `worktree-earl-fib-123-new-feature`.
 
-This is not about Kubernetes being the right way. It is about cost and benefit. When setup cost drops by 10x, things that were not worth doing become worth doing. The juice is worth the squeeze when the squeezing is automated. It's basically free k8s juice now!
+This is not about Kubernetes being the right way. It is about cost and benefit. When setup cost drops by 10x, things that were not worth doing become worth doing.
 
 ## Making k8s actually pleasant
 
@@ -257,9 +255,9 @@ This matters for debugging. Instead of ~4 roundtrips to k8s to find the pods it 
 
 ### Grafana MCP
 
-I've been experimenting with the grafana mcp tool. It works reasonably well enough, but there's an incredible amount of context taken up by all of the tool definitions. Which is kind of great and kind of horrible I guess? I've built an observability plugin that details how to use the MCP and hides the context use inside a subagent so my main session just gets a tiny little link to a temp file with the logs or the traces that are relevant or whatever when it's debugging an issue, but it's hard to get Claude to use it? This is probably a skill issue and I'm just holding the plugin wrong, but beware that just because you build some excellent infrastructure for your little miracle AI engineer doesn't mean they'll use it.
+I've been experimenting with the Grafana MCP tool. It works, but the tool definitions consume substantial context. I built a wrapper that hides the MCP inside a subagent, so my main session just gets a link to a temp file with the relevant logs or traces. The problem: it's hard to get Claude to actually use it.
 
-This is probably a trait they learned from humans. When I worked at The Climate Corporation, there was this big, beautiful splunk server, and from what I know about splunk licensing fees we were probably paying some hideous amount to them for them to index all of our logs. But I had ssh access, and I had grep, and so I think I did a lot more debugging in the terminal than I should have. Claude's just like me!
+This is a trait Claude learned from humans. When I worked at The Climate Corporation, we had a big, beautiful Splunk server—probably costing us a hideous amount in licensing fees. But I had ssh access and grep, so I did most of my debugging in the terminal anyway. Claude does the same thing. Just because you build excellent infrastructure doesn't mean your engineers will use it.
 
 ## Temporal and workflow isolation
 
@@ -417,42 +415,40 @@ The observability stack and database templating can come later. They are nice to
 
 I will write up the production deployment side of this in a follow-up post. How the worktree namespaces map to preview environments, how we handle migrations across branches, the CI/CD integration. Different problems, same pattern: Claude handles the tedious parts.
 
-## Other ideas that seem good
+## The thing I keep forgetting
+
+One of the hardest adjustments is unlearning the shortcuts. My instincts were honed shipping code under pressure, where "do it right" meant "do it later, if ever." The hack that worked was better than the proper solution that took too long.
+
+Those instincts are now miscalibrated. Setting up real namespace isolation instead of juggling port numbers. Writing a proper wrapper script instead of remembering the incantation.
+
+I spent years in iterative improvement. I find myself now going directly to the version I actually wanted. Not because I have more discipline, but because the economics changed. The right way is not much harder than the wrong way when someone else writes the code.
+
+Your team of Claudes needs a platform team. Someone has to build the scaffolding that lets them work in parallel without stepping on each other. That someone can also be Claude.
+
+---
+
+## Appendix: other approaches
+
+This is not the only way to solve the isolation problem. Here are some alternatives I have been watching.
 
 ### Gas Town
 
-There are tons of really smart people doing things that I admire, but am filled with fear by. Steve Yegge, easily one of the top ~3-4 writers who are also engineers, has been on what can only be described as a vibe coding bender. Most people have seen [beads](https://github.com/steveyegge/beads) which is a delightfully chaotic memory/issue/notepad/tool for agents to use to manage their workstreams, but more recently he released a project called gas town. [Gas Town](https://github.com/steveyegge/gastown) was released with a blog post [here](https://steve-yegge.medium.com/welcome-to-gas-town-4f25ee16dd04) that will either be one of those "I was there when he released it" moments either way I think.
-
-I've got to admit that I haven't yet had the courage to try any real projects with gas town. I was seriously considering it, I even emailed Steve to ask if he wanted to record a zoom call as I set it up to try and find all the rough edges we could. But I think I'm too scared?
+Steve Yegge released [Gas Town](https://github.com/steveyegge/gastown), an agent orchestration system where named workers patrol your codebase and handle different concerns. It is ambitious and chaotic in the best way. I have not tried it yet because I am waiting for the dust to settle:
 
 > Apologies to everyone using Gas Town who is being bitten by the murderous rampaging Deacon who is spree-killing all the other workers while on his patrol. I am as frustrated as you are. Fixes incoming in v0.4.0, but for now, please run your town with no Deacon.
 >
 > — [Steve Yegge](https://x.com/steve_yegge/status/2009108074062041255)
 
-I think it makes sense to start using Gas Town once I can tell whether someone is talking about a passage in Blood Meridian or an agent orchestrator, but for now I'm going to stay away from the cutting edge.
-
 ### Durable agent environments
 
-Kurt Mackey at Fly.io wrote about [why ephemeral sandboxes are wrong for agents](https://fly.io/blog/code-and-let-live/). His argument: agents do not want containers. They want computers.
+Kurt Mackey at Fly.io wrote about [why ephemeral sandboxes are wrong for agents](https://fly.io/blog/code-and-let-live/). His solution is "Sprites": durable micro-VMs with instant checkpoint and restore. Create one in a second, install dependencies, checkpoint. Come back days later, everything is where you left it.
 
-His solution is "Sprites," which are durable micro-VMs with instant checkpoint and restore. Create one in a second, install your dependencies, checkpoint. Come back days later, everything is where you left it. Break something catastrophically, restore in one second.
-
-This is a different slice of the same problem I am solving. My worktree setup gives each Claude session its own isolated environment, but those environments are still tied to my local machine. Sprites are the cloud-native version: disposable computers you can summon in a snap.
-
-The checkpoint/restore angle is interesting. It is basically filesystem-level Neon, instant snapshots of the whole system state. If someone built that for databases specifically, the template cloning approach I use would become obsolete.
-
-I think these might work quite well for relatively atomic projects? If you don't need to coordinate a few things talking to each other, this seems pretty nice.
-
-I have not tried Sprites yet. The use case that tempts me is long-running agents that need to survive my laptop closing. Right now I just don't really close my laptop. `caffeinate -d` hogs a terminal tab at all times, and I can live with that for now?
-
-### Devcontainers
-
-Microsoft has been pushing devcontainers and VS Code remote development for years. The idea is that your entire dev environment is containerised and can run anywhere.
+This solves a different slice of the same problem. My worktree setup is local; Sprites are the cloud-native version. The checkpoint/restore angle is interesting for database state too.
 
 ### Nix
 
-If your dev setup is fully declarative, spinning up identical environments becomes trivial. The learning curve is steep. I have tried Nix three times and bounced off each time. But the promise is real: `nix develop` and you have everything, every time, on any machine. I think I have to mention nix, because everyone who reads technical blogs on the internet uses nix or at least wants to in their heart. So, here's the nix shout out, nix can probably do this too somehow. `nix` is to development environments as communism is to economic systems: Real Nix development environments have never been tried!
+If your environment is fully declarative, `nix develop` gives you everything, every time, on any machine. I have bounced off Nix three times. Maybe the fourth attempt will stick.
 
-### Git push to deploy platforms
+### Preview environment platforms
 
-Railway, Render, and the "git push to deploy" platforms solve a different problem—production hosting rather than dev environments—but the infrastructure they build is relevant. Instant preview environments per PR. Automatic database branching. Some of these ideas will eventually make it to local dev.
+Railway, Render, and similar platforms offer instant preview environments per PR, sometimes with database branching. They solve production hosting rather than local dev, but the infrastructure patterns are converging.
