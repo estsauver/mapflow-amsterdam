@@ -39,8 +39,10 @@ export default {
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
+        fraunces: ["Fraunces", "serif"],
+        mono: ["JetBrains Mono", "monospace"],
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
