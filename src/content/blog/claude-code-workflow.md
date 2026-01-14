@@ -419,9 +419,9 @@ I will write up the production deployment side of this in a follow-up post. How 
 
 One of the hardest adjustments is unlearning the shortcuts. My instincts were honed shipping code under pressure, where "do it right" meant "do it later, if ever." The hack that worked was better than the proper solution that took too long.
 
-Those instincts are now miscalibrated. The proper solution often takes barely longer than the hack. Setting up real namespace isolation instead of juggling port numbers. Writing a proper wrapper script instead of remembering the incantation. The gap between "quick and dirty" and "actually correct" has narrowed to the point where dirty is no longer quicker.
+Those instincts are now miscalibrated. Setting up real namespace isolation instead of juggling port numbers. Writing a proper wrapper script instead of remembering the incantation.
 
-I spent years in iterative improvement. Ship the hack, promise to fix it later, never fix it because something else is on fire. Now I find myself going directly to the version I actually wanted. Not because I have more discipline, but because the economics changed. The right way is not much harder than the wrong way when someone else writes the YAML.
+I spent years in iterative improvement. I find myself going directly to the version I actually wanted. Not because I have more discipline, but because the economics changed. The right way is not much harder than the wrong way when someone else writes the code.
 
 Your team of Claudes needs a platform team. Someone has to build the scaffolding that lets them work in parallel without stepping on each other. That someone can also be Claude.
 
