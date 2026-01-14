@@ -452,3 +452,7 @@ If your environment is fully declarative, `nix develop` gives you everything, ev
 ### Preview environment platforms
 
 Railway, Render, and similar platforms offer instant preview environments per PR, sometimes with database branching. They solve production hosting rather than local dev, but the infrastructure patterns are converging.
+
+### Conductor
+
+Readers have suggested [Conductor](https://www.conductor.build/), a Mac app that runs multiple Claude Code agents simultaneously. It handles the git worktree setup automatically—each workspace is an isolated branch of your repo. If you want the parallel agent workflow without building the infrastructure yourself, this is the turnkey option.
