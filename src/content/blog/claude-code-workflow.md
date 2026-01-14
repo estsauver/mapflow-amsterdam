@@ -415,12 +415,40 @@ The observability stack and database templating can come later. They are nice to
 
 I will write up the production deployment side of this in a follow-up post. How the worktree namespaces map to preview environments, how we handle migrations across branches, the CI/CD integration. Different problems, same pattern: Claude handles the tedious parts.
 
-## The meta-point
+## The thing I keep forgetting
 
-There is a category of infrastructure that has always been valuable but historically not worth the setup cost. Isolated dev environments. Proper observability. Declarative deployments. We knew they were good. We just could not justify the time.
+One of the hardest adjustments is unlearning the shortcuts. My instincts were honed shipping code under pressure, where "do it right" meant "do it later, if ever." The hack that worked was better than the proper solution that took too long.
 
-That calculus changed. Not because AI writes better YAML than humans—it does not, particularly—but because the cost dropped below the threshold where the investment pays off. For a small team, Kubernetes was insane. Now it is merely unconventional.
+Those instincts are now miscalibrated. The proper solution often takes barely longer than the hack. Setting up real namespace isolation instead of juggling port numbers. Writing a proper wrapper script instead of remembering the incantation. The gap between "quick and dirty" and "actually correct" has narrowed to the point where dirty is no longer quicker.
 
-The interesting question is: what else is in that category? What other tools and practices have you dismissed as "not worth it for a team our size"? The answers might be different now.
+I spent years in iterative improvement. Ship the hack, promise to fix it later, never fix it because something else is on fire. Now I find myself going directly to the version I actually wanted. Not because I have more discipline, but because the economics changed. The right way is not much harder than the wrong way when someone else writes the YAML.
 
 Your team of Claudes needs a platform team. Someone has to build the scaffolding that lets them work in parallel without stepping on each other. That someone can also be Claude.
+
+---
+
+## Appendix: other approaches
+
+This is not the only way to solve the isolation problem. Here are some alternatives I have been watching.
+
+### Gas Town
+
+Steve Yegge released [Gas Town](https://github.com/steveyegge/gastown), an agent orchestration system where named workers patrol your codebase and handle different concerns. It is ambitious and chaotic in the best way. I have not tried it yet because I am waiting for the dust to settle:
+
+> Apologies to everyone using Gas Town who is being bitten by the murderous rampaging Deacon who is spree-killing all the other workers while on his patrol. I am as frustrated as you are. Fixes incoming in v0.4.0, but for now, please run your town with no Deacon.
+>
+> — [Steve Yegge](https://x.com/steve_yegge/status/2009108074062041255)
+
+### Durable agent environments
+
+Kurt Mackey at Fly.io wrote about [why ephemeral sandboxes are wrong for agents](https://fly.io/blog/code-and-let-live/). His solution is "Sprites": durable micro-VMs with instant checkpoint and restore. Create one in a second, install dependencies, checkpoint. Come back days later, everything is where you left it.
+
+This solves a different slice of the same problem. My worktree setup is local; Sprites are the cloud-native version. The checkpoint/restore angle is interesting for database state too.
+
+### Nix
+
+If your environment is fully declarative, `nix develop` gives you everything, every time, on any machine. I have bounced off Nix three times. Maybe the fourth attempt will stick.
+
+### Preview environment platforms
+
+Railway, Render, and similar platforms offer instant preview environments per PR, sometimes with database branching. They solve production hosting rather than local dev, but the infrastructure patterns are converging.
