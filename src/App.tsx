@@ -10,7 +10,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
+        {/* All routes render the same Index page - routing state is handled by dialogs */}
         <Route path="/" element={<Index />} />
+        <Route path="/about" element={<Index />} />
+        <Route path="/contact" element={<Index />} />
+        <Route path="/projects" element={<Index />} />
+        <Route path="/projects/:projectId" element={<Index />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
       </Routes>

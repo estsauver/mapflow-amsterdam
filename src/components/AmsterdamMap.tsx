@@ -45,10 +45,10 @@ const LOCATIONS: Location[] = [
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const currentLocationIndex = useRef<number>(0);
+  const currentLocationIndex = useRef<number>(1);
   const isAnimating = useRef<boolean>(false);
   const autoAdvance = useRef<boolean>(true);
-  const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[0]);
+  const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[1]);
   const [isVisible, setIsVisible] = useState(true);
 
   const flyToLocation = (index: number, fast: boolean = false) => {
@@ -110,8 +110,8 @@ const AmsterdamMap = () => {
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/estsauver/cm56kfvmt004q01podka2b1q9',
-      center: LOCATIONS[0].coordinates,
-      zoom: LOCATIONS[0].zoom,
+      center: LOCATIONS[1].coordinates,
+      zoom: LOCATIONS[1].zoom,
       pitch: 45,
       bearing: -17.6,
       antialias: true,
@@ -127,7 +127,9 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      flyToNextLocation();
+      // Don't immediately fly to next location on load
+      // Let the 'idle' handler start the animation cycle after the initial view settles
+      // This prevents the caption from changing before the map finishes loading
     });
 
     mapInstance.current.on('idle', () => {
