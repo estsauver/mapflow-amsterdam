@@ -17,40 +17,6 @@ I will cover git worktrees for parallel branches, why worktrees alone fail (shar
 
 The takeaway is not "use these exact tools." It is that there is a category of infrastructure, stuff that is clearly valuable but historically not worth the setup cost, that becomes worth doing when someone else handles the YAML. There is great leverage in AI writing your business logic, but your team of Claudes also needs a platform team. Someone has to build the scaffolding that lets them work in parallel without stepping on each other. That someone can also be Claude.
 
-<!--
-VISUALIZATION PLAN: Hero Image / Worktree Lifecycle Animation
-
-Type: Animated hero illustration OR static generated image
-
-Option A - Static (for image generation):
-See: prompt-01-hero.txt
-Three terminal windows with isolation bubbles, showing parallel Claude sessions
-
-Option B - Interactive React component:
-Animated sequence showing `wt create earl/fib-123-feature --go` lifecycle:
-
-1. Command typed in terminal (typewriter effect)
-2. Git worktree created (folder icon appears)
-3. k8s namespace created (bubble/box appears)
-4. Pods spin up (small icons animate in: frontend, backend, worker)
-5. Database cloned (database icon with copy animation)
-6. Ingress configured (URL appears: earl-fib-123-feature.localhost)
-7. Claude Code launches (terminal icon with sparkle)
-
-Visual style:
-- Dark slate background matching blog theme
-- Amber/gold accents for highlights
-- Green status indicators for success states
-- Terminal aesthetic with the red/yellow/green dots
-
-Interaction:
-- Auto-plays on page load
-- "Replay" button to watch again
-- Could respond to scroll position (scrubbing through the animation)
-
-Tech: React + Framer Motion, possibly with Lottie for complex animations
--->
-
 ## Worktrees are great (but fiddly)
 
 [Git worktrees](https://matklad.github.io/2024/07/25/git-worktrees.html) let you check out multiple branches simultaneously, each in its own directory. Instead of stashing, switching, and losing context, you can have both branches open at once.
@@ -115,32 +81,8 @@ Twenty minutes of Claude's time writing the script. Hours of my time saved. That
 
 ## The isolation problem
 
-<!--
-VISUALIZATION PLAN: Port Collision Animation
-
-Type: Animated SVG or React component
-
-Concept: Two-panel animation showing the problem
-- Panel 1 (Before): Two terminal windows both trying to bind to :3000
-  - Terminal A: "npm run dev" → "Listening on :3000" ✓
-  - Terminal B: "npm run dev" → "EADDRINUSE :3000" ✗ (red flash)
-  - Visual: Both terminals pointing at same port icon, collision sparks
-
-- Panel 2 (After - with k8s): Two terminal windows, each in own namespace
-  - Terminal A in bubble "worktree-main": → ":3000" ✓
-  - Terminal B in bubble "worktree-feature": → ":3000" ✓
-  - Visual: Separate isolated bubbles, no collision
-
-Animation sequence:
-1. Show single port 3000 icon
-2. First terminal connects (green checkmark)
-3. Second terminal tries to connect (red X, shake animation)
-4. Transition: bubbles/namespaces appear, separating them
-5. Both now connect successfully (both green)
-
-Tech: React component with Framer Motion, or pure CSS animation
-Interaction: Auto-plays on scroll into view, can replay on click
--->
+```visualization:port-collision
+```
 
 Thirty minutes into enthusiastic worktree use:
 
@@ -218,40 +160,8 @@ Kubernetes gives you isolation. It also gives you new problems. Where are my log
 
 ### Shared infrastructure, isolated applications
 
-<!--
-VISUALIZATION PLAN: Namespace Architecture Diagram
-
-Type: Interactive SVG diagram (React component)
-
-Layout:
-- Top: Single "infra" box (amber/gold themed)
-- Bottom: Multiple "worktree-*" boxes (cyan/teal themed) that can expand
-
-Interactive features:
-1. Hover on infra box → highlights all connection lines to worktrees
-2. Hover on worktree box → shows only that worktree's connections
-3. Click to expand any box → shows the services inside with icons
-4. Animated data flow lines showing telemetry going UP to infra
-
-Data model:
+```visualization:namespace-architecture
 ```
-infra: {
-  services: ['postgresql', 'temporal-server', 'grafana', 'prometheus', 'jaeger', 'loki', 'otel-collector'],
-  type: 'shared'
-}
-worktrees: [
-  { name: 'main', services: ['frontend', 'backend', 'temporal-worker'] },
-  { name: 'earl-fib-123-feature', services: ['frontend', 'backend', 'temporal-worker'] }
-]
-```
-
-Animation: Subtle pulse on the connection lines showing data flow direction
-Color coding: Amber = shared (expensive, runs once), Cyan = isolated (cheap, cloned)
-
-Could also show a "Add worktree" button that animates a new namespace appearing
-
-See: prompt-02-namespace-architecture.txt for static version
--->
 
 Not everything gets duplicated. The cluster has two kinds of namespaces: one `infra` namespace for shared services, and one `worktree-{name}` namespace per branch.
 
@@ -390,39 +300,8 @@ This is the kind of detail I would never have bothered with if I had to implemen
 
 ## The database question
 
-<!--
-VISUALIZATION PLAN: Database Branching Comparison
-
-Type: Side-by-side animated comparison diagram
-
-Left side - "Template Cloning (Current)":
-- Single template database icon at top
-- Arrow pointing down labeled "COPY" (takes seconds)
-- Multiple full database icons at bottom (full copies)
-- Visual: Each copy is same size as original
-- Storage bar showing: "3 worktrees = 3x storage"
-- Clock icon: "~5 seconds per clone"
-
-Right side - "Copy-on-Write (Dream)":
-- Single source database icon at top
-- Branching tree structure below (like git branches)
-- Multiple "thin" database icons that share blocks with parent
-- Visual: Copies are small, showing shared blocks
-- Storage bar showing: "3 worktrees = 1x + deltas"
-- Clock icon: "instant"
-
-Animation sequence:
-1. Show template database
-2. Animate a full copy being made (slow, shows data moving)
-3. Show storage increasing
-4. Transition to CoW side
-5. Show instant branch creation (fast flash)
-6. Show shared blocks visualization (overlapping regions)
-
-Could be interactive: Click "Create worktree" button to see the difference in action
-
-Tech: React + Framer Motion, or D3.js for the storage visualization
--->
+```visualization:database-branching
+```
 
 Databases are the hard part. Pods, networking, filesystems are cheap to duplicate. Databases have state. State is heavy.
 

@@ -4,6 +4,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { getPostBySlug } from '../lib/blog';
+import {
+  PortCollision,
+  NamespaceArchitecture,
+  DatabaseBranching,
+} from '../components/blog/visualizations';
 
 interface TocItem {
   id: string;
@@ -344,7 +349,50 @@ const BlogPost = () => {
                   </figure>
                 );
               },
+              pre({ children, ...props }) {
+                // Check if this pre contains a visualization code block
+                const codeChild = React.Children.toArray(children).find(
+                  (child): child is React.ReactElement =>
+                    React.isValidElement(child) && child.type === 'code'
+                );
+
+                if (codeChild && codeChild.props?.className) {
+                  const match = /language-visualization:(\w+[-\w]*)/.exec(codeChild.props.className);
+                  if (match) {
+                    const vizType = match[1];
+                    switch (vizType) {
+                      case 'port-collision':
+                        return <div className="my-8 not-prose"><PortCollision /></div>;
+                      case 'namespace-architecture':
+                        return <div className="my-8 not-prose"><NamespaceArchitecture /></div>;
+                      case 'database-branching':
+                        return <div className="my-8 not-prose"><DatabaseBranching /></div>;
+                      default:
+                        return null;
+                    }
+                  }
+                }
+
+                // Default pre rendering
+                return <pre {...props}>{children}</pre>;
+              },
               code({ node, className, children, ...props }) {
+                // Check for visualization blocks first (colon in language name)
+                const vizMatch = /language-visualization:([\w-]+)/.exec(className || '');
+                if (vizMatch) {
+                  const vizType = vizMatch[1];
+                  switch (vizType) {
+                    case 'port-collision':
+                      return <div className="my-8 not-prose"><PortCollision /></div>;
+                    case 'namespace-architecture':
+                      return <div className="my-8 not-prose"><NamespaceArchitecture /></div>;
+                    case 'database-branching':
+                      return <div className="my-8 not-prose"><DatabaseBranching /></div>;
+                    default:
+                      return null;
+                  }
+                }
+
                 const match = /language-(\w+)/.exec(className || '');
                 const isInline = !match && !className;
 
