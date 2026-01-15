@@ -48,27 +48,24 @@ const AmsterdamMap = () => {
   const currentLocationIndex = useRef<number>(1);
   const isAnimating = useRef<boolean>(false);
   const autoAdvance = useRef<boolean>(true);
+  const pendingLocationIndex = useRef<number | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[1]);
   const [isVisible, setIsVisible] = useState(true);
 
   const flyToLocation = (index: number, fast: boolean = false) => {
     if (!mapInstance.current) return;
 
-    // Cancel any pending animation timeout
+    // Mark as animating and hide caption during flight
     isAnimating.current = true;
     setIsVisible(false);
 
+    // Store the destination index to update caption when flight completes
+    pendingLocationIndex.current = index;
     currentLocationIndex.current = index;
-    const nextLocation = LOCATIONS[index];
-
-    setTimeout(() => {
-      setCurrentLocation(nextLocation);
-      setIsVisible(true);
-    }, 500);
 
     mapInstance.current.flyTo({
-      center: nextLocation.coordinates,
-      zoom: nextLocation.zoom,
+      center: LOCATIONS[index].coordinates,
+      zoom: LOCATIONS[index].zoom,
       curve: 1.42,
       speed: fast ? 1.2 : 0.05,
       easing(t) {
@@ -109,7 +106,7 @@ const AmsterdamMap = () => {
 
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/estsauver/cm56kfvmt004q01podka2b1q9',
+      style: 'mapbox://styles/estsauver/cmkf7vxxn007v01qubjkm3t5t',
       center: LOCATIONS[1].coordinates,
       zoom: LOCATIONS[1].zoom,
       pitch: 45,
@@ -121,9 +118,10 @@ const AmsterdamMap = () => {
     mapInstance.current.on('load', () => {
       if (!mapInstance.current) return;
 
+      // Du Bois-inspired fog using parchment tones
       mapInstance.current.setFog({
-        'color': 'rgb(255, 255, 255)',
-        'high-color': 'rgb(200, 200, 225)',
+        'color': 'rgb(232, 220, 200)',      // Parchment
+        'high-color': 'rgb(210, 180, 140)', // Tan
         'horizon-blend': 0.2,
       });
 
@@ -133,6 +131,13 @@ const AmsterdamMap = () => {
     });
 
     mapInstance.current.on('idle', () => {
+      // Update caption when flight completes
+      if (pendingLocationIndex.current !== null) {
+        setCurrentLocation(LOCATIONS[pendingLocationIndex.current]);
+        setIsVisible(true);
+        pendingLocationIndex.current = null;
+      }
+
       isAnimating.current = false;
       if (autoAdvance.current) {
         flyToNextLocation();
@@ -160,9 +165,9 @@ const AmsterdamMap = () => {
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="glass-panel px-6 py-4 max-w-md">
-          <h2 className="font-beth-ellen text-xl mb-1">{currentLocation.name}</h2>
-          <p className="text-sm text-muted-foreground">{currentLocation.caption}</p>
+        <div className="dubois-panel px-6 py-4 max-w-md">
+          <h2 className="dubois-title text-xl mb-1 text-dubois-ink">{currentLocation.name}</h2>
+          <p className="text-sm text-dubois-charcoal">{currentLocation.caption}</p>
         </div>
       </div>
     </div>

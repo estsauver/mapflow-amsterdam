@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import DuBoisColorBar from './DuBoisColorBar';
 
 interface AboutDialogProps {
   open: boolean;
@@ -15,16 +16,18 @@ interface AboutDialogProps {
 const AboutDialog = ({ open, onOpenChange }: AboutDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-panel border-none">
-        <DialogHeader className="space-y-4">
-          <DialogTitle className="font-beth-ellen text-2xl">About Me</DialogTitle>
-          <DialogDescription className="space-y-4 text-lg">
+      <DialogContent className="dubois-panel p-0 border-2 border-dubois-ink overflow-hidden">
+        <DuBoisColorBar />
+
+        <DialogHeader className="space-y-4 p-6">
+          <DialogTitle className="dubois-title text-2xl text-dubois-ink">About Me</DialogTitle>
+          <DialogDescription className="space-y-4 text-base text-dubois-charcoal">
             <img
               src="/earl.jpeg"
               alt="Earl St Sauver"
-              className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
+              className="w-32 h-32 object-cover mx-auto mb-4 border-2 border-dubois-ink"
             />
-            <p>
+            <p className="text-dubois-ink">
               I'm Earl St Sauver. I build things that matter with people I admire.
             </p>
 

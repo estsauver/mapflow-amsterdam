@@ -1,6 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
+// Du Bois color palette
+const COLORS = {
+  carmine: '#C41E3A',
+  gold: '#DAA520',
+  prussian: '#1E3A5F',
+  emerald: '#2E8B57',
+  ink: '#1A1A1A',
+  charcoal: '#4A4A4A',
+  parchment: '#E8DCC8',
+  cream: '#F5F0E6',
+  sepia: '#8B4513',
+  burgundy: '#800020',
+};
+
 interface Service {
   name: string;
   icon: React.ReactNode;
@@ -63,10 +77,10 @@ const NamespaceBox: React.FC<{
   return (
     <motion.div
       className={`
-        relative rounded-xl border-2 p-4 transition-all duration-300 cursor-pointer
+        relative border-2 p-4 transition-all duration-300 cursor-pointer
         ${isInfra
-          ? 'bg-amber-500/5 border-amber-500/30'
-          : 'bg-cyan-500/5 border-cyan-500/30'
+          ? 'bg-dubois-gold/10 border-dubois-gold'
+          : 'bg-dubois-prussian/10 border-dubois-prussian'
         }
         ${isHovered ? 'scale-105 shadow-xl' : ''}
         ${isOtherHovered ? 'opacity-50' : ''}
@@ -77,21 +91,25 @@ const NamespaceBox: React.FC<{
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className={`
-            w-2 h-2 rounded-full
-            ${isInfra ? 'bg-amber-500' : 'bg-cyan-500'}
-          `} />
-          <span className={`
-            font-mono text-sm font-medium
-            ${isInfra ? 'text-amber-400' : 'text-cyan-400'}
-          `}>
+          <div
+            className="w-2 h-2"
+            style={{ backgroundColor: isInfra ? COLORS.gold : COLORS.prussian }}
+          />
+          <span
+            className="font-mono text-sm font-medium"
+            style={{ color: isInfra ? COLORS.gold : COLORS.prussian }}
+          >
             {title}
           </span>
         </div>
-        <span className={`
-          text-[10px] font-mono px-2 py-0.5 rounded
-          ${isInfra ? 'bg-amber-500/20 text-amber-400' : 'bg-cyan-500/20 text-cyan-400'}
-        `}>
+        <span
+          className="text-[10px] font-mono px-2 py-0.5 border"
+          style={{
+            backgroundColor: isInfra ? `${COLORS.gold}20` : `${COLORS.prussian}20`,
+            color: isInfra ? COLORS.gold : COLORS.prussian,
+            borderColor: isInfra ? COLORS.gold : COLORS.prussian,
+          }}
+        >
           {isInfra ? 'shared' : 'isolated'}
         </span>
       </div>
@@ -104,10 +122,12 @@ const NamespaceBox: React.FC<{
             initial={hasAppeared ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: hasAppeared ? 0 : index * 0.05 }}
-            className={`
-              flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs
-              ${isInfra ? 'bg-amber-500/10 text-amber-300' : 'bg-cyan-500/10 text-cyan-300'}
-            `}
+            className="flex items-center gap-2 px-2 py-1.5 text-xs border"
+            style={{
+              backgroundColor: isInfra ? `${COLORS.gold}15` : `${COLORS.prussian}15`,
+              color: isInfra ? COLORS.sepia : COLORS.prussian,
+              borderColor: isInfra ? `${COLORS.gold}40` : `${COLORS.prussian}40`,
+            }}
           >
             <span className="opacity-60">{service.icon}</span>
             <span className="truncate">{service.name}</span>
@@ -122,7 +142,12 @@ const NamespaceBox: React.FC<{
           initial={hasAppeared ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="w-2 h-6 bg-gradient-to-t from-cyan-500/50 to-amber-500/50 rounded-full" />
+          <div
+            className="w-2 h-6"
+            style={{
+              background: `linear-gradient(to top, ${COLORS.prussian}80, ${COLORS.gold}80)`,
+            }}
+          />
         </motion.div>
       )}
     </motion.div>
@@ -168,12 +193,12 @@ export const NamespaceArchitecture: React.FC = () => {
       {/* Legend */}
       <div className="flex justify-center gap-6 mb-8">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-500" />
-          <span className="text-xs font-mono text-slate-400">Shared (runs once)</span>
+          <div className="w-3 h-3" style={{ backgroundColor: COLORS.gold }} />
+          <span className="text-xs font-mono text-dubois-charcoal">Shared (runs once)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-500" />
-          <span className="text-xs font-mono text-slate-400">Isolated (per worktree)</span>
+          <div className="w-3 h-3" style={{ backgroundColor: COLORS.prussian }} />
+          <span className="text-xs font-mono text-dubois-charcoal">Isolated (per worktree)</span>
         </div>
       </div>
 
@@ -183,8 +208,8 @@ export const NamespaceArchitecture: React.FC = () => {
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
           <defs>
             <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgb(245 158 11 / 0.3)" />
-              <stop offset="100%" stopColor="rgb(6 182 212 / 0.3)" />
+              <stop offset="0%" stopColor={`${COLORS.gold}50`} />
+              <stop offset="100%" stopColor={`${COLORS.prussian}50`} />
             </linearGradient>
           </defs>
 
@@ -200,7 +225,7 @@ export const NamespaceArchitecture: React.FC = () => {
                 y1="35%"
                 x2={xOffset}
                 y2="65%"
-                stroke={isActive ? 'url(#connectionGradient)' : 'rgb(51 65 85 / 0.3)'}
+                stroke={isActive ? 'url(#connectionGradient)' : `${COLORS.charcoal}30`}
                 strokeWidth={isActive ? 3 : 1}
                 strokeDasharray={isActive ? '0' : '4 4'}
                 initial={hasAppeared.current ? false : { pathLength: 0 }}
@@ -230,7 +255,7 @@ export const NamespaceArchitecture: React.FC = () => {
         {/* Data flow indicator */}
         <div className="flex justify-center my-4">
           <motion.div
-            className="flex flex-col items-center gap-1 text-slate-500"
+            className="flex flex-col items-center gap-1 text-dubois-charcoal"
             animate={{ y: [0, 5, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
@@ -261,7 +286,7 @@ export const NamespaceArchitecture: React.FC = () => {
 
       {/* Explanation text */}
       <div className="mt-8 text-center">
-        <p className="text-xs font-mono text-slate-500">
+        <p className="text-xs font-mono text-dubois-charcoal">
           Hover over boxes to highlight connections
         </p>
       </div>

@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { getPostBySlug } from '../lib/blog';
+import DuBoisColorBar from '../components/DuBoisColorBar';
 import {
   PortCollision,
   NamespaceArchitecture,
@@ -16,10 +17,10 @@ interface TocItem {
   level: number;
 }
 
-// USGC-inspired "RETICLE" theme - industrial fluorescent aesthetic
-const usgcReticleTheme: { [key: string]: React.CSSProperties } = {
+// Du Bois-inspired syntax theme - warm, muted tones on parchment
+const duboisSyntaxTheme: { [key: string]: React.CSSProperties } = {
   'code[class*="language-"]': {
-    color: '#00A645',
+    color: '#1A1A1A',
     background: 'none',
     fontFamily: '"JetBrains Mono", monospace',
     fontSize: '0.875rem',
@@ -33,8 +34,8 @@ const usgcReticleTheme: { [key: string]: React.CSSProperties } = {
     hyphens: 'none',
   },
   'pre[class*="language-"]': {
-    color: '#00A645',
-    background: '#000000',
+    color: '#1A1A1A',
+    background: '#F5F0E6',
     fontFamily: '"JetBrains Mono", monospace',
     fontSize: '0.875rem',
     textAlign: 'left',
@@ -48,38 +49,38 @@ const usgcReticleTheme: { [key: string]: React.CSSProperties } = {
     padding: '1.5rem',
     margin: '0',
     overflow: 'auto',
-    borderRadius: '0.5rem',
+    borderRadius: '0',
   },
-  'comment': { color: '#666666', fontStyle: 'italic' },
-  'prolog': { color: '#666666' },
-  'doctype': { color: '#666666' },
-  'cdata': { color: '#666666' },
-  'punctuation': { color: '#00A645' },
+  'comment': { color: '#8B4513', fontStyle: 'italic' },     // Sepia
+  'prolog': { color: '#8B4513' },
+  'doctype': { color: '#8B4513' },
+  'cdata': { color: '#8B4513' },
+  'punctuation': { color: '#4A4A4A' },                       // Charcoal
   'namespace': { opacity: 0.7 },
-  'property': { color: '#00FFFF' },
-  'tag': { color: '#00FFFF' },
-  'boolean': { color: '#00FFFF' },
-  'number': { color: '#00FFFF' },
-  'constant': { color: '#00FFFF' },
-  'symbol': { color: '#00FFFF' },
-  'deleted': { color: '#FF0000' },
-  'selector': { color: '#FFBF00' },
-  'attr-name': { color: '#FFBF00' },
-  'string': { color: '#FFBF00' },
-  'char': { color: '#FFBF00' },
-  'builtin': { color: '#FFBF00' },
-  'inserted': { color: '#00FF00' },
-  'operator': { color: '#FFFFFF' },
-  'entity': { color: '#FFFFFF', cursor: 'help' },
-  'url': { color: '#FFFFFF' },
-  'atrule': { color: '#FF0000' },
-  'attr-value': { color: '#FFBF00' },
-  'keyword': { color: '#FF0000' },
-  'function': { color: '#FF00FF' },
-  'class-name': { color: '#FF00FF' },
-  'regex': { color: '#FF6600' },
-  'important': { color: '#FF6600', fontWeight: 'bold' },
-  'variable': { color: '#FF6600' },
+  'property': { color: '#1E3A5F' },                          // Prussian
+  'tag': { color: '#1E3A5F' },
+  'boolean': { color: '#C41E3A' },                           // Carmine
+  'number': { color: '#C41E3A' },
+  'constant': { color: '#C41E3A' },
+  'symbol': { color: '#C41E3A' },
+  'deleted': { color: '#800020' },                           // Burgundy
+  'selector': { color: '#2E8B57' },                          // Emerald
+  'attr-name': { color: '#2E8B57' },
+  'string': { color: '#2E8B57' },
+  'char': { color: '#2E8B57' },
+  'builtin': { color: '#DAA520' },                           // Gold
+  'inserted': { color: '#2E8B57' },
+  'operator': { color: '#4A4A4A' },
+  'entity': { color: '#4A4A4A', cursor: 'help' },
+  'url': { color: '#1E3A5F' },
+  'atrule': { color: '#800020' },
+  'attr-value': { color: '#2E8B57' },
+  'keyword': { color: '#C41E3A' },
+  'function': { color: '#1E3A5F' },
+  'class-name': { color: '#DAA520' },
+  'regex': { color: '#8B4513' },
+  'important': { color: '#C41E3A', fontWeight: 'bold' },
+  'variable': { color: '#DAA520' },
   'bold': { fontWeight: 'bold' },
   'italic': { fontStyle: 'italic' },
 };
@@ -177,29 +178,27 @@ const BlogPost = () => {
   const readingTime = Math.ceil(wordCount / 200);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
+    <div className="min-h-screen bg-dubois-parchment overflow-hidden">
       {/* Reading progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-0.5 bg-slate-900 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-dubois-tan z-50">
         <div
-          className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-150 ease-out"
+          className="h-full bg-dubois-carmine transition-all duration-150 ease-out"
           style={{ width: `${scrollProgress}%` }}
         />
       </div>
 
-      {/* Subtle grain texture overlay */}
-      <div className="fixed inset-0 opacity-[0.02] pointer-events-none" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+      {/* Subtle paper texture overlay */}
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
       }} />
-
-      {/* Ambient glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
       {/* Table of Contents - hidden on mobile, sticky on desktop */}
       {tableOfContents.length > 0 && (
         <nav className="hidden xl:block fixed left-8 top-32 w-56 max-h-[calc(100vh-12rem)] overflow-y-auto z-40">
-          <div className="border-l border-slate-800/50 pl-4">
-            <span className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-4 block">
-              On this page
+          <div className="dubois-panel p-4 overflow-hidden">
+            <DuBoisColorBar className="absolute top-0 left-0 right-0" />
+            <span className="dubois-heading text-[10px] text-dubois-charcoal mb-3 block mt-2">
+              On This Page
             </span>
             <ul className="space-y-1">
               {tableOfContents.map((item) => (
@@ -210,8 +209,8 @@ const BlogPost = () => {
                       block w-full text-left text-sm py-1.5 transition-all duration-200
                       ${item.level === 3 ? 'pl-3' : ''}
                       ${activeHeading === item.id
-                        ? 'text-amber-400'
-                        : 'text-slate-500 hover:text-slate-300'
+                        ? 'text-dubois-carmine font-medium'
+                        : 'text-dubois-charcoal hover:text-dubois-ink'
                       }
                     `}
                   >
@@ -228,7 +227,7 @@ const BlogPost = () => {
         {/* Back link */}
         <Link
           to="/blog"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-amber-400 transition-colors duration-300 mb-16 group animate-fade-in"
+          className="inline-flex items-center gap-2 text-sm text-dubois-charcoal hover:text-dubois-carmine transition-colors duration-300 mb-16 group animate-fade-in"
         >
           <svg
             className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"
@@ -236,82 +235,84 @@ const BlogPost = () => {
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          All posts
+          <span className="dubois-heading text-xs">All Posts</span>
         </Link>
 
         {/* Article header */}
-        <header className="mb-12 animate-slide-up">
-          {/* Meta info row */}
-          <div className="flex items-center gap-4 mb-6">
-            <time className="text-xs text-slate-500 font-mono tabular-nums">
-              {new Date(post.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </time>
-            <span className="text-slate-700">·</span>
-            <span className="text-xs text-slate-500 font-mono">{readingTime} min read</span>
-            <span className="text-slate-700">·</span>
-            <span className="text-xs text-slate-600 font-mono">{wordCount.toLocaleString()} words</span>
+        <header className="dubois-panel mb-12 animate-slide-up overflow-hidden">
+          <DuBoisColorBar />
+          <div className="p-8">
+            {/* Meta info row */}
+            <div className="flex items-center gap-4 mb-6">
+              <time className="text-xs text-dubois-charcoal font-mono tabular-nums">
+                {new Date(post.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+              <span className="text-dubois-tan">·</span>
+              <span className="text-xs text-dubois-sepia font-mono">{readingTime} min read</span>
+              <span className="text-dubois-tan">·</span>
+              <span className="text-xs text-dubois-charcoal font-mono">{wordCount.toLocaleString()} words</span>
+            </div>
+
+            <h1 className="dubois-title text-3xl md:text-4xl lg:text-5xl text-dubois-ink leading-tight mb-6">
+              {post.title}
+            </h1>
+
+            {post.description && (
+              <p className="text-lg text-dubois-charcoal leading-relaxed">
+                {post.description}
+              </p>
+            )}
           </div>
-
-          <h1 className="font-fraunces text-4xl md:text-5xl lg:text-6xl font-medium text-white leading-[1.1] tracking-tight mb-8">
-            {post.title}
-          </h1>
-
-          {post.description && (
-            <p className="text-xl md:text-2xl text-slate-400 leading-relaxed font-light">
-              {post.description}
-            </p>
-          )}
         </header>
 
         {/* Decorative divider */}
-        <div className="flex items-center gap-4 mb-14 animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <div className="h-px flex-1 bg-gradient-to-r from-slate-800 to-transparent" />
+        <div className="flex items-center gap-4 mb-12 animate-slide-up" style={{ animationDelay: '100ms' }}>
+          <div className="h-0.5 flex-1 bg-dubois-ink" />
           <div className="flex gap-1">
-            <div className="w-1 h-1 rounded-full bg-amber-500/40" />
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500/70" />
-            <div className="w-1 h-1 rounded-full bg-amber-500/40" />
+            <div className="w-2 h-2 bg-dubois-carmine" />
+            <div className="w-2 h-2 bg-dubois-gold" />
+            <div className="w-2 h-2 bg-dubois-prussian" />
           </div>
-          <div className="h-px flex-1 bg-gradient-to-l from-slate-800 to-transparent" />
+          <div className="h-0.5 flex-1 bg-dubois-ink" />
         </div>
 
         {/* Article content */}
         <div className="
-          prose prose-lg prose-invert max-w-none animate-slide-up
+          prose prose-lg max-w-none animate-slide-up
 
-          prose-headings:font-fraunces prose-headings:font-medium prose-headings:tracking-tight
-          prose-h2:text-2xl prose-h2:text-slate-100 prose-h2:mt-16 prose-h2:mb-6 prose-h2:relative
-          prose-h2:before:absolute prose-h2:before:-left-4 prose-h2:before:top-0 prose-h2:before:bottom-0
-          prose-h2:before:w-1 prose-h2:before:bg-amber-500/50 prose-h2:before:rounded-full
-          prose-h3:text-xl prose-h3:text-slate-200 prose-h3:mt-12 prose-h3:mb-4
-          prose-h4:text-lg prose-h4:text-slate-300 prose-h4:mt-8 prose-h4:mb-3
+          prose-headings:font-condensed prose-headings:font-semibold prose-headings:tracking-wide prose-headings:uppercase
+          prose-h2:text-xl prose-h2:text-dubois-ink prose-h2:mt-14 prose-h2:mb-6 prose-h2:relative
+          prose-h2:pl-4 prose-h2:border-l-4 prose-h2:border-dubois-carmine
+          prose-h3:text-lg prose-h3:text-dubois-ink prose-h3:mt-10 prose-h3:mb-4
+          prose-h4:text-base prose-h4:text-dubois-charcoal prose-h4:mt-8 prose-h4:mb-3
 
-          prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:mb-6
+          prose-p:text-dubois-ink prose-p:leading-[1.8] prose-p:mb-6
 
-          prose-a:text-amber-400 prose-a:no-underline prose-a:border-b prose-a:border-amber-400/30
-          hover:prose-a:border-amber-400 prose-a:transition-colors
+          prose-a:text-dubois-carmine prose-a:no-underline prose-a:border-b-2 prose-a:border-dubois-carmine/30
+          hover:prose-a:border-dubois-carmine prose-a:transition-colors
 
-          prose-strong:text-slate-200 prose-strong:font-semibold
-          prose-em:text-slate-300 prose-em:italic
+          prose-strong:text-dubois-ink prose-strong:font-semibold
+          prose-em:text-dubois-charcoal prose-em:italic
 
-          prose-code:text-[#00A645] prose-code:bg-black prose-code:px-1.5 prose-code:py-0.5
-          prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
-          prose-code:border prose-code:border-[#00A645]/20
+          prose-code:text-dubois-prussian prose-code:bg-dubois-cream prose-code:px-1.5 prose-code:py-0.5
+          prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+          prose-code:border prose-code:border-dubois-ink/20
 
           prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0
 
           prose-blockquote:border-none prose-blockquote:bg-transparent
           prose-blockquote:p-0 prose-blockquote:not-italic prose-blockquote:my-0
 
-          prose-ul:text-slate-300 prose-ol:text-slate-300
-          prose-li:marker:text-amber-500/50 prose-li:my-2
+          prose-ul:text-dubois-ink prose-ol:text-dubois-ink
+          prose-li:marker:text-dubois-carmine prose-li:my-2
 
-          prose-hr:border-slate-800 prose-hr:my-12
+          prose-hr:border-dubois-ink prose-hr:my-12
         " style={{ animationDelay: '150ms' }}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -328,21 +329,21 @@ const BlogPost = () => {
               },
               blockquote({ children, ...props }) {
                 return (
-                  <figure className="my-12 not-prose">
+                  <figure className="my-10 not-prose">
                     <blockquote
-                      className="relative py-8 px-10 bg-slate-800/60 rounded-2xl border border-slate-700/50 shadow-xl [&>p]:before:content-none [&>p]:after:content-none"
+                      className="relative py-6 px-8 bg-dubois-cream border-2 border-dubois-ink shadow-[3px_3px_0_0_rgba(26,26,26,0.8)] [&>p]:before:content-none [&>p]:after:content-none"
                       {...props}
                     >
                       {/* Large decorative quotation mark */}
                       <svg
-                        className="absolute top-6 left-6 w-12 h-12 text-amber-500/30"
+                        className="absolute top-4 left-4 w-10 h-10 text-dubois-gold/50"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                         aria-hidden="true"
                       >
                         <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                       </svg>
-                      <div className="relative pl-10 text-slate-200 text-lg md:text-xl leading-relaxed font-light italic [&>p]:mb-4 [&>p:last-child]:mb-0 [&>p]:before:content-none [&>p]:after:content-none [&_a]:text-amber-400 [&_a]:not-italic [&_a]:font-normal [&_a]:no-underline [&_a]:border-b [&_a]:border-amber-400/30 hover:[&_a]:border-amber-400">
+                      <div className="relative pl-8 text-dubois-ink text-lg leading-relaxed italic [&>p]:mb-4 [&>p:last-child]:mb-0 [&>p]:before:content-none [&>p]:after:content-none [&_a]:text-dubois-carmine [&_a]:not-italic [&_a]:font-normal [&_a]:no-underline [&_a]:border-b-2 [&_a]:border-dubois-carmine/30 hover:[&_a]:border-dubois-carmine">
                         {children}
                       </div>
                     </blockquote>
@@ -405,22 +406,22 @@ const BlogPost = () => {
                 }
 
                 return (
-                  <div className="relative my-8 rounded-lg overflow-hidden border border-[#00A645]/30 shadow-xl shadow-black/40 group">
-                    {/* Terminal header bar */}
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-black border-b border-[#00A645]/20">
+                  <div className="relative my-8 overflow-hidden border-2 border-dubois-ink shadow-[3px_3px_0_0_rgba(26,26,26,0.8)] group">
+                    {/* Terminal header bar - Du Bois style */}
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-dubois-ink border-b-2 border-dubois-ink">
                       <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-[#FF0000]/80 group-hover:bg-[#FF0000] transition-colors" />
-                        <div className="w-3 h-3 rounded-full bg-[#FFBF00]/80 group-hover:bg-[#FFBF00] transition-colors" />
-                        <div className="w-3 h-3 rounded-full bg-[#00A645]/80 group-hover:bg-[#00A645] transition-colors" />
+                        <div className="w-3 h-3 bg-dubois-carmine" />
+                        <div className="w-3 h-3 bg-dubois-gold" />
+                        <div className="w-3 h-3 bg-dubois-emerald" />
                       </div>
                       {match && (
-                        <span className="ml-auto text-[10px] font-mono text-[#00A645]/60 uppercase tracking-[0.15em]">
+                        <span className="ml-auto text-[10px] font-mono text-dubois-cream uppercase tracking-[0.15em]">
                           {match[1]}
                         </span>
                       )}
                     </div>
                     <SyntaxHighlighter
-                      style={usgcReticleTheme}
+                      style={duboisSyntaxTheme}
                       language={match ? match[1] : 'text'}
                       PreTag="div"
                       showLineNumbers={false}
@@ -429,7 +430,7 @@ const BlogPost = () => {
                       customStyle={{
                         margin: 0,
                         borderRadius: 0,
-                        background: '#000000',
+                        background: '#F5F0E6',
                         border: 'none',
                         padding: '1.5rem',
                         textIndent: 0,
@@ -455,11 +456,11 @@ const BlogPost = () => {
         </div>
 
         {/* Article footer */}
-        <footer className="mt-20 pt-10 border-t border-slate-800/30">
+        <footer className="mt-16 pt-8 border-t-2 border-dubois-ink">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-amber-400 transition-colors duration-300 group"
+              className="inline-flex items-center gap-2 text-sm text-dubois-charcoal hover:text-dubois-carmine transition-colors duration-300 group"
             >
               <svg
                 className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"
@@ -467,14 +468,14 @@ const BlogPost = () => {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to all posts
+              <span className="dubois-heading text-xs">Back to All Posts</span>
             </Link>
 
-            <div className="flex items-center gap-3 text-xs font-mono text-slate-600">
+            <div className="flex items-center gap-3 text-xs font-mono text-dubois-charcoal">
               <span>{wordCount.toLocaleString()} words</span>
-              <span className="text-slate-700">·</span>
+              <span className="text-dubois-tan">·</span>
               <span>{readingTime} min read</span>
             </div>
           </div>
