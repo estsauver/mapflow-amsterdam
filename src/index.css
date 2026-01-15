@@ -240,3 +240,9 @@
   border-bottom: none !important;
   text-decoration: none !important;
 }
+
+/* Hide Mapbox logo and attribution */
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}

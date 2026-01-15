@@ -45,22 +45,17 @@ const LOCATIONS: Location[] = [
 const AmsterdamMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const currentLocationIndex = useRef<number>(1);
-  const isAnimating = useRef<boolean>(false);
+  const currentLocationIndex = useRef<number>(0);
+  const isFlying = useRef<boolean>(false);
   const autoAdvance = useRef<boolean>(true);
-  const pendingLocationIndex = useRef<number | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[1]);
+  const [currentLocation, setCurrentLocation] = useState<Location>(LOCATIONS[0]);
   const [isVisible, setIsVisible] = useState(true);
 
   const flyToLocation = (index: number, fast: boolean = false) => {
-    if (!mapInstance.current) return;
+    if (!mapInstance.current || isFlying.current) return;
 
-    // Mark as animating and hide caption during flight
-    isAnimating.current = true;
+    isFlying.current = true;
     setIsVisible(false);
-
-    // Store the destination index to update caption when flight completes
-    pendingLocationIndex.current = index;
     currentLocationIndex.current = index;
 
     mapInstance.current.flyTo({
@@ -72,6 +67,21 @@ const AmsterdamMap = () => {
         return t;
       }
     });
+  };
+
+  const onFlightComplete = () => {
+    isFlying.current = false;
+    setCurrentLocation(LOCATIONS[currentLocationIndex.current]);
+    setIsVisible(true);
+
+    // Schedule next flight after showing caption for a bit
+    if (autoAdvance.current) {
+      setTimeout(() => {
+        if (autoAdvance.current) {
+          flyToNextLocation();
+        }
+      }, 3000); // Show caption for 3 seconds before flying again
+    }
   };
 
   const flyToNextLocation = (fast: boolean = false) => {
@@ -107,8 +117,8 @@ const AmsterdamMap = () => {
     mapInstance.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/estsauver/cmkf7vxxn007v01qubjkm3t5t',
-      center: LOCATIONS[1].coordinates,
-      zoom: LOCATIONS[1].zoom,
+      center: LOCATIONS[0].coordinates,
+      zoom: LOCATIONS[0].zoom,
       pitch: 45,
       bearing: -17.6,
       antialias: true,
@@ -125,22 +135,18 @@ const AmsterdamMap = () => {
         'horizon-blend': 0.2,
       });
 
-      // Don't immediately fly to next location on load
-      // Let the 'idle' handler start the animation cycle after the initial view settles
-      // This prevents the caption from changing before the map finishes loading
+      // Start the animation cycle after initial load with a delay
+      setTimeout(() => {
+        if (autoAdvance.current) {
+          flyToNextLocation();
+        }
+      }, 3000); // Show initial location for 3 seconds
     });
 
-    mapInstance.current.on('idle', () => {
-      // Update caption when flight completes
-      if (pendingLocationIndex.current !== null) {
-        setCurrentLocation(LOCATIONS[pendingLocationIndex.current]);
-        setIsVisible(true);
-        pendingLocationIndex.current = null;
-      }
-
-      isAnimating.current = false;
-      if (autoAdvance.current) {
-        flyToNextLocation();
+    // Use moveend to detect when flight completes
+    mapInstance.current.on('moveend', () => {
+      if (isFlying.current) {
+        onFlightComplete();
       }
     });
 
@@ -154,19 +160,19 @@ const AmsterdamMap = () => {
 
   return (
     <div className="relative w-full h-screen">
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0">
         <div ref={mapContainer} className="w-full h-full" />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40 pointer-events-none z-10" />
 
       {/* Location caption */}
       <div
-        className={`absolute bottom-8 left-8 z-10 transition-opacity duration-500 ease-in-out ${
+        className={`absolute bottom-8 left-8 z-20 transition-opacity duration-500 ease-in-out ${
           isVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="dubois-panel px-6 py-4 max-w-md">
-          <h2 className="dubois-title text-xl mb-1 text-dubois-ink">{currentLocation.name}</h2>
+        <div className="bg-dubois-cream border-2 border-dubois-ink shadow-[3px_3px_0_0_rgba(26,26,26,0.8)] px-6 py-4 max-w-md">
+          <h2 className="font-condensed uppercase tracking-wider text-xl mb-1 text-dubois-ink font-semibold">{currentLocation.name}</h2>
           <p className="text-sm text-dubois-charcoal">{currentLocation.caption}</p>
         </div>
       </div>
