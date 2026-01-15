@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Beth+Ellen&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Beth+Ellen&family=Oswald:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,48 +6,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
-    --primary: 47.9 95.8% 53.1%;
-    --primary-foreground: 26 83.3% 14.1%;
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 20 14.3% 4.1%;
-    --radius: 0.75rem;
+    /* Du Bois Theme Colors */
+    --dubois-carmine: #C41E3A;
+    --dubois-gold: #DAA520;
+    --dubois-prussian: #1E3A5F;
+    --dubois-emerald: #2E8B57;
+    --dubois-ink: #1A1A1A;
+    --dubois-charcoal: #4A4A4A;
+    --dubois-parchment: #E8DCC8;
+    --dubois-cream: #F5F0E6;
+    --dubois-warm-white: #FAF8F5;
+    --dubois-sepia: #8B4513;
+    --dubois-steel: #4682B4;
+    --dubois-tan: #D2B48C;
+    --dubois-burgundy: #800020;
+
+    /* Shadcn variables mapped to Du Bois palette */
+    --background: 37 33% 90%;
+    --foreground: 0 0% 10%;
+    --card: 40 33% 94%;
+    --card-foreground: 0 0% 10%;
+    --popover: 40 33% 94%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 350 74% 44%;
+    --primary-foreground: 40 33% 96%;
+    --secondary: 43 74% 49%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 35 24% 80%;
+    --muted-foreground: 0 0% 29%;
+    --accent: 209 53% 28%;
+    --accent-foreground: 40 33% 96%;
+    --destructive: 350 74% 44%;
+    --destructive-foreground: 40 33% 96%;
+    --border: 0 0% 10%;
+    --input: 35 24% 80%;
+    --ring: 350 74% 44%;
+    --radius: 0px;
   }
- 
+
   .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 60 9.1% 97.8%;
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
-    --primary: 47.9 95.8% 53.1%;
-    --primary-foreground: 26 83.3% 14.1%;
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --ring: 35.5 91.7% 32.9%;
+    --background: 0 0% 10%;
+    --foreground: 40 33% 94%;
+    --card: 0 0% 15%;
+    --card-foreground: 40 33% 94%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 40 33% 94%;
+    --primary: 350 74% 44%;
+    --primary-foreground: 40 33% 96%;
+    --secondary: 43 74% 49%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 35 24% 70%;
+    --accent: 209 53% 28%;
+    --accent-foreground: 40 33% 96%;
+    --destructive: 350 74% 44%;
+    --destructive-foreground: 40 33% 96%;
+    --border: 35 24% 30%;
+    --input: 0 0% 20%;
+    --ring: 43 74% 49%;
   }
 
   * {
@@ -58,12 +74,80 @@
     @apply bg-background text-foreground font-inter antialiased;
   }
 
+  /* Du Bois Panel - parchment background with black border */
+  .dubois-panel {
+    @apply border-2 border-dubois-ink shadow-[3px_3px_0_0_rgba(26,26,26,0.8)];
+    background-color: var(--dubois-cream);
+  }
+
+  /* Glass panel - now Du Bois styled */
   .glass-panel {
-    @apply backdrop-blur-md bg-white/30 border border-white/20 shadow-lg;
+    @apply backdrop-blur-md border-2 border-dubois-ink/60 shadow-[3px_3px_0_0_rgba(26,26,26,0.3)];
+    background-color: rgba(245, 240, 230, 0.85);
   }
 
   .font-beth-ellen {
     font-family: 'Beth Ellen', cursive;
+  }
+
+  .font-dubois {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+@layer components {
+  /* Du Bois Color Bar - signature header element */
+  .dubois-color-bar {
+    display: flex;
+    height: 6px;
+    width: 100%;
+  }
+
+  .dubois-color-bar > span {
+    flex: 1;
+  }
+
+  /* Du Bois Typography */
+  .dubois-title {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .dubois-heading {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  /* Du Bois Button */
+  .dubois-btn {
+    @apply font-medium px-4 py-2 border-2 border-dubois-ink transition-all duration-150;
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dubois-btn:hover {
+    @apply shadow-[2px_2px_0_0_rgba(26,26,26,0.8)];
+    transform: translate(-1px, -1px);
+  }
+
+  .dubois-btn:active {
+    @apply shadow-none;
+    transform: translate(1px, 1px);
+  }
+
+  .dubois-btn-primary {
+    @apply bg-dubois-carmine text-dubois-warm-white;
+  }
+
+  .dubois-btn-secondary {
+    @apply bg-dubois-cream text-dubois-ink;
   }
 }
 

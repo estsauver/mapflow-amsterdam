@@ -1,0 +1,194 @@
+/**
+ * Du Bois Theme
+ * Inspired by W.E.B. Du Bois's 1900 Paris Exposition visualizations
+ * and U.S. Graphics Company aesthetic
+ */
+
+:root {
+  /* Primary Colors */
+  --dubois-carmine: #C41E3A;
+  --dubois-gold: #DAA520;
+  --dubois-prussian: #1E3A5F;
+  --dubois-emerald: #2E8B57;
+
+  /* Neutrals */
+  --dubois-ink: #1A1A1A;
+  --dubois-charcoal: #4A4A4A;
+  --dubois-parchment: #E8DCC8;
+  --dubois-cream: #F5F0E6;
+  --dubois-warm-white: #FAF8F5;
+
+  /* Extended Palette */
+  --dubois-sepia: #8B4513;
+  --dubois-steel: #4682B4;
+  --dubois-tan: #D2B48C;
+  --dubois-burgundy: #800020;
+
+  /* Semantic Mappings */
+  --color-primary: var(--dubois-carmine);
+  --color-secondary: var(--dubois-gold);
+  --color-tertiary: var(--dubois-prussian);
+  --color-success: var(--dubois-emerald);
+  --color-background: var(--dubois-parchment);
+  --color-surface: var(--dubois-cream);
+  --color-text-primary: var(--dubois-ink);
+  --color-text-secondary: var(--dubois-charcoal);
+  --color-border: var(--dubois-ink);
+}
+
+/* ============================================
+   Color Bar Component (U.S. Graphics Style)
+   ============================================ */
+
+.dubois-color-bar {
+  display: flex;
+  height: 8px;
+  width: 100%;
+}
+
+.dubois-color-bar > span {
+  flex: 1;
+}
+
+.dubois-color-bar--carmine { background-color: var(--dubois-carmine); }
+.dubois-color-bar--burgundy { background-color: var(--dubois-burgundy); }
+.dubois-color-bar--prussian { background-color: var(--dubois-prussian); }
+.dubois-color-bar--steel { background-color: var(--dubois-steel); }
+.dubois-color-bar--emerald { background-color: var(--dubois-emerald); }
+.dubois-color-bar--gold { background-color: var(--dubois-gold); }
+.dubois-color-bar--sepia { background-color: var(--dubois-sepia); }
+.dubois-color-bar--tan { background-color: var(--dubois-tan); }
+.dubois-color-bar--ink { background-color: var(--dubois-ink); }
+
+/* ============================================
+   Typography Utilities
+   ============================================ */
+
+.dubois-title {
+  font-family: 'Oswald', 'DIN Condensed', 'Bebas Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.dubois-heading {
+  font-family: 'Oswald', 'DIN Condensed', 'Bebas Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.dubois-label {
+  font-family: 'Oswald', 'DIN Condensed', 'Bebas Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+/* ============================================
+   Panel & Card Styles
+   ============================================ */
+
+.dubois-panel {
+  background-color: var(--dubois-cream);
+  border: 2px solid var(--dubois-ink);
+  padding: 1.5rem;
+}
+
+.dubois-panel--parchment {
+  background-color: var(--dubois-parchment);
+}
+
+.dubois-panel--paper-texture {
+  background-color: var(--dubois-cream);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ============================================
+   Button Styles
+   ============================================ */
+
+.dubois-btn {
+  font-family: 'Oswald', 'DIN Condensed', 'Bebas Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--dubois-ink);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.dubois-btn--primary {
+  background-color: var(--dubois-carmine);
+  color: var(--dubois-warm-white);
+}
+
+.dubois-btn--primary:hover {
+  background-color: var(--dubois-burgundy);
+}
+
+.dubois-btn--secondary {
+  background-color: var(--dubois-parchment);
+  color: var(--dubois-ink);
+}
+
+.dubois-btn--secondary:hover {
+  background-color: var(--dubois-tan);
+}
+
+.dubois-btn--gold {
+  background-color: var(--dubois-gold);
+  color: var(--dubois-ink);
+}
+
+.dubois-btn--gold:hover {
+  background-color: #C89B18;
+}
+
+/* ============================================
+   Data Visualization Helpers
+   ============================================ */
+
+.dubois-viz-carmine { fill: var(--dubois-carmine); stroke: var(--dubois-ink); }
+.dubois-viz-gold { fill: var(--dubois-gold); stroke: var(--dubois-ink); }
+.dubois-viz-prussian { fill: var(--dubois-prussian); stroke: var(--dubois-ink); }
+.dubois-viz-emerald { fill: var(--dubois-emerald); stroke: var(--dubois-ink); }
+.dubois-viz-sepia { fill: var(--dubois-sepia); stroke: var(--dubois-ink); }
+.dubois-viz-ink { fill: var(--dubois-ink); stroke: var(--dubois-ink); }
+
+/* ============================================
+   Map Overlay Styles
+   ============================================ */
+
+.dubois-map-overlay {
+  background-color: var(--dubois-cream);
+  border: 2px solid var(--dubois-ink);
+  padding: 1rem 1.5rem;
+  box-shadow: 4px 4px 0 var(--dubois-ink);
+}
+
+.dubois-map-legend {
+  background-color: var(--dubois-parchment);
+  border: 1px solid var(--dubois-ink);
+  padding: 0.75rem 1rem;
+}
+
+/* ============================================
+   Border Utilities
+   ============================================ */
+
+.dubois-border {
+  border: 2px solid var(--dubois-ink);
+}
+
+.dubois-border-thick {
+  border: 3px solid var(--dubois-ink);
+}
+
+.dubois-border-carmine {
+  border-color: var(--dubois-carmine);
+}
+
+.dubois-border-gold {
+  border-color: var(--dubois-gold);
+}

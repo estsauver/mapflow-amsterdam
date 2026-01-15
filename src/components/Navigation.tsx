@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AboutDialog from './AboutDialog';
 import ProjectsDialog from './ProjectsDialog';
 import ContactDialog from './ContactDialog';
+import DuBoisColorBar from './DuBoisColorBar';
 
 const Navigation = () => {
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -63,46 +64,50 @@ const Navigation = () => {
   return (
     <>
       <nav className="fixed top-8 right-8 z-10">
-        <div className="glass-panel rounded-lg p-4">
-          <div className="mb-4">
-            <h1 className="text-2xl text-foreground">
-              Earl St Sauver
-            </h1>
+        <div className="dubois-panel overflow-hidden">
+          <DuBoisColorBar />
+
+          <div className="p-4">
+            <div className="mb-4">
+              <h1 className="dubois-title text-xl text-dubois-ink">
+                Earl St Sauver
+              </h1>
+            </div>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  onClick={handleOpenAbout}
+                  className="dubois-btn dubois-btn-secondary w-full text-left text-sm"
+                >
+                  About
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={handleOpenProjects}
+                  className="dubois-btn dubois-btn-secondary w-full text-left text-sm"
+                >
+                  Projects
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={handleOpenContact}
+                  className="dubois-btn dubois-btn-secondary w-full text-left text-sm"
+                >
+                  Contact
+                </button>
+              </li>
+              <li>
+                <Link
+                  to="/blog"
+                  className="dubois-btn dubois-btn-secondary w-full text-left text-sm block"
+                >
+                  Blog
+                </Link>
+              </li>
+            </ul>
           </div>
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={handleOpenAbout}
-                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                About
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={handleOpenProjects}
-                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                Projects
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={handleOpenContact}
-                className="w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                Contact
-              </button>
-            </li>
-            <li>
-              <Link
-                to="/blog"
-                className="block w-full text-left px-4 py-2 rounded-md transition-all duration-300 hover:bg-white/20"
-              >
-                Blog
-              </Link>
-            </li>
-          </ul>
         </div>
       </nav>
       <AboutDialog open={aboutOpen} onOpenChange={handleAboutOpenChange} />
