@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -177,8 +178,30 @@ const BlogPost = () => {
   const wordCount = post.content.split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200);
 
+  const siteUrl = 'https://estsauver.com';
+  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  const ogImage = `${siteUrl}/earl.jpeg`;
+
   return (
     <div className="min-h-screen bg-dubois-parchment overflow-hidden">
+      <Helmet>
+        <title>{post.title} | Earl St Sauver</title>
+        <meta name="description" content={post.description} />
+
+        {/* Open Graph tags */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={postUrl} />
+        <meta property="og:type" content="article" />
+
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.description} />
+        <meta name="twitter:image" content={ogImage} />
+      </Helmet>
+
       {/* Reading progress bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-dubois-tan z-50">
         <div
