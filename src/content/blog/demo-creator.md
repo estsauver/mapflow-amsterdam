@@ -5,6 +5,8 @@ description: "Multi-agent orchestration for generating demo videos that prove Cl
 slug: "demo-creator"
 ---
 
+*The demo-creator plugin is [available on GitHub](https://github.com/estsauver/demo-creator/tree/main).*
+
 ## The supervision tax
 
 The previous post was about running Claude sessions in parallel. Worktrees for isolated code, Kubernetes for isolated environments. You can have five Claudes working on five features without them stepping on each other.
@@ -405,3 +407,13 @@ The supervision tax drops. Autonomy becomes practical.
 The pattern is the same as the previous post. We're building layers of infrastructure to address the areas where Claude is weak.
 
 The `wt` script handled parallel work. Isolated environments so sessions don't step on each other. The demo-creator handles verification, acting like a QA engineer in a limited sense. It gives us another layer of protection as we try to ship things faster.
+
+---
+
+## About the plugin
+
+I extracted demo-creator from our main monorepo and [published it on GitHub](https://github.com/estsauver/demo-creator/tree/main). The core idea is to force Claude into something closer to integration testing by making it demonstrate that things actually work end-to-end.
+
+A caveat: this isn't a polished, drop-in solution. I pulled it out of my codebase and removed some things tied to how it was integrated into my development environment. For example, we use Kubernetes to host the screenenv container that runs the Playwright tests. You'll need to run it locally or adapt it to your setup.
+
+It works well for me, but there might be adaptation required for your environment. The value I've gotten from it is real though - more often than not, you end up with a 30-second to one-minute video that shows how Claude thinks the feature should work. And when Claude cheats (it will if it feels like it needs to), at least you have video evidence of what actually happened.
