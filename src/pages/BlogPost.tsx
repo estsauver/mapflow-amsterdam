@@ -10,6 +10,7 @@ import {
   PortCollision,
   NamespaceArchitecture,
   DatabaseBranching,
+  PipelineOverview,
 } from '../components/blog/visualizations';
 
 interface TocItem {
@@ -391,6 +392,9 @@ const BlogPost = () => {
                         return <div className="my-8 not-prose"><NamespaceArchitecture /></div>;
                       case 'database-branching':
                         return <div className="my-8 not-prose"><DatabaseBranching /></div>;
+                      case 'pipeline-overview':
+                      case 'pipeline-stages':
+                        return <div className="my-8 not-prose"><PipelineOverview /></div>;
                       default:
                         return null;
                     }
@@ -412,6 +416,9 @@ const BlogPost = () => {
                       return <div className="my-8 not-prose"><NamespaceArchitecture /></div>;
                     case 'database-branching':
                       return <div className="my-8 not-prose"><DatabaseBranching /></div>;
+                    case 'pipeline-overview':
+                    case 'pipeline-stages':
+                      return <div className="my-8 not-prose"><PipelineOverview /></div>;
                     default:
                       return null;
                   }
