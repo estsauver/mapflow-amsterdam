@@ -30,7 +30,7 @@ Left to its own devices, Claude will propose the safe option: a static diagram, 
 
 I tell Claude, directly, that I'm willing to put real effort into this. Here's the kind of prompt that works:
 
-> I want this visualization to be genuinely good, not just functional. Think about what would make someone pause and actually engage with it. Consider animation, interactivity, or letting the reader explore the concept themselves. Don't optimize for simplicity. Optimize for insight. Take as many iterations as you need.
+> I want you to make a plan for visualizations that are incredibly high quality. Imagine that you are working for the New York Times and have Mike Bostock or Edward Tufte that you need to impress personally. You should design something that's both incredibly good at communicating and aesthetically beautiful, no matter how difficult it is to implement or how many hours you think it'll take. We're going to do this right and we're going to do it the hard way.
 
 This matters more than it might seem. Without that explicit permission, Claude defaults to the path of least resistance. It has an instinct to be efficient, to wrap things up quickly, to not ask for too much. When you're building visualizations, that instinct works against you. I'd rather Claude take three passes at getting an animation right than ship something underwhelming on the first try.
 
