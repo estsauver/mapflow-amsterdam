@@ -1,6 +1,6 @@
 ---
 title: "Autonomous Verification: Demo Videos as Proof of Work"
-date: "2025-01-18"
+date: "2026-01-18"
 description: "Multi-agent orchestration for generating demo videos that prove Claude's work actually works"
 slug: "demo-creator"
 ---
