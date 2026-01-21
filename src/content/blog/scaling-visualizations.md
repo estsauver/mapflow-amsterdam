@@ -5,11 +5,7 @@ description: "How Claude Code changed what's possible for interactive explanatio
 slug: "scaling-visualizations"
 ---
 
-Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) sets a standard that most of us can only admire from a distance. His explanations of mechanical watches, GPS, or bicycle physics aren't just informative. They're persuasive in a way that static text can't match. You trust his technical descriptions because of the obvious care in every animation, illustration, and interactive element. That level of craft has always required either deep design skills or a team.
-
-I've been building interactive visualizations for blog posts using Claude Code, both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog), and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
-
-This is a short description of how that process works.
+A former colleague asked me about how I approach building visualizations with Claude, so I thought I'd write down some notes. I'm not making anything world-changing here. But I do think you can make some pretty incredible things really quickly now, and the workflow is worth sharing.
 
 ```visualization:build-loop
 ```
