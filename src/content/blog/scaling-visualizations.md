@@ -5,9 +5,9 @@ description: "How Claude Code changed what's possible for interactive explanatio
 slug: "scaling-visualizations"
 ---
 
-Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) sets a standard that most of us can only admire from a distance. His explanations of mechanical watches, GPS, or bicycle physics aren't just informative—they're persuasive in a way that static text can't match. You trust his technical descriptions because of the obvious care in every animation, illustration, and interactive element. That level of craft has always required either deep design skills or a team.
+Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) sets a standard that most of us can only admire from a distance. His explanations of mechanical watches, GPS, or bicycle physics aren't just informative. They're persuasive in a way that static text can't match. You trust his technical descriptions because of the obvious care in every animation, illustration, and interactive element. That level of craft has always required either deep design skills or a team.
 
-I've been building interactive visualizations for blog posts using Claude Code—both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog)—and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
+I've been building interactive visualizations for blog posts using Claude Code, both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog), and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
 
 This is a short description of how that process works.
 
@@ -16,7 +16,7 @@ This is a short description of how that process works.
 
 ## The workflow starts during writing
 
-The process doesn't begin when I'm done with a blog post and decide to add visuals. It happens while I'm writing, when I notice something isn't quite working—a concept that's difficult to explain, a description that feels flat, a moment where I'm reaching for tools that aren't suited to what I'm trying to say.
+The process doesn't begin when I'm done with a blog post and decide to add visuals. It happens while I'm writing, when I notice something isn't quite working. A concept that's difficult to explain. A description that feels flat. A moment where I'm reaching for tools that aren't suited to what I'm trying to say.
 
 Sometimes a visualization is the answer when a section is just getting boring and needs something to break up the monotony. But more often, the real candidates are descriptions of things that unfold over time, or relationships that are easier to explore in a small simulator than to parse in prose. These aren't decorations. They're a faster, more engaging way to help someone actually understand an idea.
 
@@ -26,11 +26,11 @@ When I spot a section that could benefit from this treatment, I don't stop writi
 
 Claude is a phenomenal engineer. It's also, by default, a conservative one.
 
-Left to its own devices, Claude will propose the safe option: a static diagram, a simple chart, a table that technically conveys the information. This isn't a flaw exactly—it's trying to be helpful without overcommitting your time or resources. But it means you have to explicitly unlock the more ambitious work.
+Left to its own devices, Claude will propose the safe option: a static diagram, a simple chart, a table that technically conveys the information. This isn't a flaw exactly. It's trying to be helpful without overcommitting your time or resources. But it means you have to explicitly unlock the more ambitious work.
 
 I tell Claude, directly, that I'm willing to put real effort into this. Here's the kind of prompt that works:
 
-> I want this visualization to be genuinely good, not just functional. Think about what would make someone pause and actually engage with it. Consider animation, interactivity, or letting the reader explore the concept themselves. Don't optimize for simplicity—optimize for insight. Take as many iterations as you need.
+> I want this visualization to be genuinely good, not just functional. Think about what would make someone pause and actually engage with it. Consider animation, interactivity, or letting the reader explore the concept themselves. Don't optimize for simplicity. Optimize for insight. Take as many iterations as you need.
 
 This matters more than it might seem. Without that explicit permission, Claude defaults to the path of least resistance. It has an instinct to be efficient, to wrap things up quickly, to not ask for too much. When you're building visualizations, that instinct works against you. I'd rather Claude take three passes at getting an animation right than ship something underwhelming on the first try.
 
@@ -42,7 +42,7 @@ The review step is where I spend most of my time, and where most of the iteratio
 
 So I look at every visualization myself. I scrub through the animations. I check the data against what I know to be true. I look for the subtle things: labels that overlap, transitions that feel too fast, axes that don't make sense. When I find issues, I describe them to Claude, it fixes them, and I check again. This loop repeats until I'm satisfied.
 
-One thing that does parallelize well: generating options. I'll often ask Claude to build three or four different approaches to a visualization, then review them side by side. The goal isn't to use all of them—it's to quickly understand what's possible and consolidate down to the best choice.
+One thing that does parallelize well: generating options. I'll often ask Claude to build three or four different approaches to a visualization, then review them side by side. The goal isn't to use all of them. It's to quickly understand what's possible and consolidate down to the best choice.
 
 ## The tech stack
 
@@ -82,7 +82,7 @@ Claude handles this math from scratch: coordinate transformations, scaling funct
 
 The cost of picking the wrong abstraction is low now. If we start down a path and it's not working, we go back to the drawing board and rebuild. Claude makes that cheap. This changes the calculus: you can try the more ambitious approach first, knowing that you're not committed to it if the implementation gets ugly.
 
-Framer Motion handles the animation orchestration. Its scroll hooks and spring physics give you the polished feel without writing your own animation loop. The combination—Framer Motion for motion, raw SVG for rendering, Claude for the math—has been the right trade-off between flexibility and effort.
+Framer Motion handles the animation orchestration. Its scroll hooks and spring physics give you the polished feel without writing your own animation loop. The combination of Framer Motion for motion, raw SVG for rendering, and Claude for the math has been the right trade-off between flexibility and effort.
 
 ## The unlock
 
@@ -94,6 +94,6 @@ The common thread: people who have something to say but previously lacked the to
 
 The bottleneck has shifted. It's no longer "can I build this?" It's "what should I show?" That's a better problem to have. The constraint is now the quality of your ideas, not the tools at your disposal.
 
-I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch—his work reflects years of accumulated craft and a visual intuition that I don't have. But for the rest of us, the floor has come up dramatically. Work that used to require either rare skills or a dedicated team is now accessible to anyone with taste, patience for iteration, and access to Claude.
+I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch. His work reflects years of accumulated craft and a visual intuition that I don't have. But for the rest of us, the floor has come up dramatically. Work that used to require either rare skills or a dedicated team is now accessible to anyone with taste, patience for iteration, and access to Claude.
 
-That's a meaningful change. Not because it creates more noise—though it might—but because it means more people can participate in the kind of careful, visual explanation that actually helps others understand complex ideas. The best technical communication has always been visual. Now more of us can do it.
+That's a meaningful change. Not because it creates more noise (though it might) but because it means more people can participate in the kind of careful, visual explanation that actually helps others understand complex ideas. The best technical communication has always been visual. Now more of us can do it.
