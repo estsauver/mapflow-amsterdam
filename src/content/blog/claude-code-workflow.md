@@ -1,6 +1,6 @@
 ---
 title: "Getting Real Leverage from Claude Code"
-date: "2025-01-13"
+date: "2026-01-13"
 description: "Running multiple Claude Code sessions in parallel, each in its own fully isolated environment"
 slug: "claude-code-workflow"
 ---
