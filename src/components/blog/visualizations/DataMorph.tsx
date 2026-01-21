@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const COLORS = {
   carmine: '#C41E3A',
@@ -30,7 +30,7 @@ const POINT_COLORS = [
   COLORS.burgundy,
 ];
 
-type ViewMode = 'bars' | 'scatter' | 'line' | 'radial';
+type ViewMode = 'bars' | 'scatter' | 'line' | 'radial' | 'pigeons';
 
 const CHART = {
   left: 20,
@@ -43,7 +43,7 @@ const CHART = {
 
 export const DataMorph: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('bars');
-  const views: ViewMode[] = ['bars', 'scatter', 'line', 'radial'];
+  const views: ViewMode[] = ['bars', 'scatter', 'line', 'radial', 'pigeons'];
 
   const maxValue = Math.max(...DATA.map(d => d.value));
   const barWidth = 10;
@@ -82,7 +82,19 @@ export const DataMorph: React.FC = () => {
         const size = 10;
         return { x: cx - size/2, y: cy - size/2, width: size, height: size, rx: size/2 };
       }
+      case 'pigeons': {
+        const flyX = 20 + index * 20 + (index % 2) * 10;
+        const flyY = -20 - index * 8;
+        return { x: flyX, y: flyY, width: 10, height: 10, rx: 5 };
+      }
     }
+  };
+
+  const getPigeonPosition = (index: number) => {
+    const flyX = 30 + index * 18 + (index % 2) * 5;
+    const flyY = -15 - index * 6 - (index % 3) * 4;
+    const rotation = -30 - index * 5 + (index % 2) * 10;
+    return { x: flyX, y: flyY, rotation };
   };
 
   const getLinePath = (): string => {
@@ -97,21 +109,27 @@ export const DataMorph: React.FC = () => {
   };
 
   const getLabelPosition = (d: typeof DATA[0], index: number) => {
+    if (viewMode === 'pigeons') {
+      return { x: -100, y: -100, opacity: 0 };
+    }
     const pos = getPosition(d, index);
     switch (viewMode) {
       case 'bars':
-        return { x: pos.x + pos.width / 2, y: CHART.bottom + 8 };
+        return { x: pos.x + pos.width / 2, y: CHART.bottom + 8, opacity: 1 };
       case 'scatter':
       case 'line':
-        return { x: pos.x + pos.width / 2, y: pos.y - 4 };
+        return { x: pos.x + pos.width / 2, y: pos.y - 4, opacity: 1 };
       case 'radial': {
         const angle = (index / DATA.length) * 2 * Math.PI - Math.PI / 2;
         const labelRadius = 12 + (d.value / maxValue) * 18 + 10;
         return {
           x: CHART.centerX + Math.cos(angle) * labelRadius,
           y: CHART.centerY + Math.sin(angle) * labelRadius + 2,
+          opacity: 1,
         };
       }
+      default:
+        return { x: 0, y: 0, opacity: 0 };
     }
   };
 
@@ -122,7 +140,7 @@ export const DataMorph: React.FC = () => {
           Same Data, Different Views
         </h4>
         <p className="text-xs text-dubois-charcoal mt-1 font-mono">
-          One dataset, four representations
+          One dataset, {viewMode === 'pigeons' ? 'gone' : 'four representations'}
         </p>
       </div>
 
@@ -139,14 +157,14 @@ export const DataMorph: React.FC = () => {
               }
             `}
           >
-            {view === 'bars' ? 'Bar Chart' : view === 'scatter' ? 'Scatter Plot' : view === 'line' ? 'Connected' : 'Radial'}
+            {view === 'bars' ? 'Bar Chart' : view === 'scatter' ? 'Scatter Plot' : view === 'line' ? 'Connected' : view === 'radial' ? 'Radial' : 'Pigeons'}
           </button>
         ))}
       </div>
 
-      <div className="bg-dubois-parchment border-2 border-dubois-ink p-4">
+      <div className="bg-dubois-parchment border-2 border-dubois-ink p-4 overflow-hidden">
         <svg viewBox="0 0 125 85" className="w-full h-auto">
-          {viewMode !== 'radial' && (
+          {viewMode !== 'radial' && viewMode !== 'pigeons' && (
             <>
               <line
                 x1={CHART.left}
@@ -206,24 +224,80 @@ export const DataMorph: React.FC = () => {
             />
           )}
 
-          {DATA.map((d, i) => {
-            const pos = getPosition(d, i);
-            return (
-              <motion.rect
-                key={d.label}
-                fill={POINT_COLORS[i]}
-                initial={false}
-                animate={{
-                  x: pos.x,
-                  y: pos.y,
-                  width: pos.width,
-                  height: pos.height,
-                  rx: pos.rx,
-                }}
-                transition={{ type: 'spring', stiffness: 120, damping: 14 }}
-              />
-            );
-          })}
+          <AnimatePresence mode="wait">
+            {viewMode === 'pigeons' ? (
+              DATA.map((d, i) => {
+                const pigeonPos = getPigeonPosition(i);
+                return (
+                  <motion.g
+                    key={`pigeon-${d.label}`}
+                    initial={{
+                      x: getBarX(i) + barWidth/2,
+                      y: CHART.bottom - getBarHeight(d.value)/2,
+                      scale: 0.5,
+                      rotate: 0,
+                    }}
+                    animate={{
+                      x: pigeonPos.x,
+                      y: pigeonPos.y,
+                      scale: 1,
+                      rotate: pigeonPos.rotation,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 50,
+                      damping: 10,
+                      delay: i * 0.1,
+                    }}
+                  >
+                    <motion.ellipse
+                      cx="0"
+                      cy="0"
+                      rx="5"
+                      ry="3"
+                      fill={POINT_COLORS[i]}
+                    />
+                    <motion.path
+                      d="M-2,-2 Q0,-6 3,-3"
+                      fill="none"
+                      stroke={POINT_COLORS[i]}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      animate={{
+                        d: ["M-2,-2 Q0,-6 3,-3", "M-2,-2 Q0,-1 3,-2", "M-2,-2 Q0,-6 3,-3"],
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                    <circle cx="4" cy="-1" r="2" fill={POINT_COLORS[i]} />
+                    <path d="M6,-1 L8,-0.5 L6,0" fill={COLORS.gold} />
+                  </motion.g>
+                );
+              })
+            ) : (
+              DATA.map((d, i) => {
+                const pos = getPosition(d, i);
+                return (
+                  <motion.rect
+                    key={d.label}
+                    fill={POINT_COLORS[i]}
+                    initial={false}
+                    animate={{
+                      x: pos.x,
+                      y: pos.y,
+                      width: pos.width,
+                      height: pos.height,
+                      rx: pos.rx,
+                    }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 14 }}
+                  />
+                );
+              })
+            )}
+          </AnimatePresence>
 
           {DATA.map((d, i) => {
             const labelPos = getLabelPosition(d, i);
@@ -237,6 +311,7 @@ export const DataMorph: React.FC = () => {
                 animate={{
                   x: labelPos.x,
                   y: labelPos.y,
+                  opacity: labelPos.opacity,
                 }}
                 transition={{ type: 'spring', stiffness: 120, damping: 14 }}
               >
@@ -249,7 +324,9 @@ export const DataMorph: React.FC = () => {
 
       <div className="mt-4 text-center">
         <p className="text-xs font-mono text-dubois-charcoal max-w-md mx-auto">
-          Same six data points, morphing between views. Try this with a charting library.
+          {viewMode === 'pigeons'
+            ? "And sometimes your data just flies away."
+            : "Same six data points, morphing between views. Try this with a charting library."}
         </p>
       </div>
     </div>
