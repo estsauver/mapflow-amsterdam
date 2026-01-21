@@ -7,9 +7,9 @@ slug: "scaling-visualizations"
 
 People take work with visualizations more seriously. They always have. A well-crafted interactive explanation signals that someone has put real time and effort into understanding what they're trying to communicate. It earns a kind of trust that prose alone doesn't.
 
-Everyone who's ever worked on the front end has a copy of Edward Tufte's visualization book somewhere. Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) is the modern version of that aspiration. I find myself fascinated by his explanations, and I implicitly trust his technical descriptions because of the obvious care in the animation, illustration, and storytelling. The visualizations aren't just proving a point—they're earning credibility.
+Everyone who's ever worked on the front end has a copy of Edward Tufte's visualization book somewhere. Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) is the modern version of that aspiration. I find myself fascinated by his explanations, and I implicitly trust his technical descriptions because of the obvious care in the animation, illustration, and storytelling.
 
-For most of us, that kind of work has been out of reach. It required either design skills we don't have or a team we'd need to coordinate. But I've been building interactive visualizations for blog posts using Claude Code—both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog)—and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
+I've been building interactive visualizations for blog posts using Claude Code—both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog)—and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
 
 This is a short description of how that process works.
 

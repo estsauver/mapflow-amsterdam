@@ -15,14 +15,33 @@ const COLORS = {
   burgundy: '#800020',
 };
 
+// Bar data - consistent across stages
+const BAR_DATA = [
+  { value: 40, label: 'Jan' },
+  { value: 65, label: 'Feb' },
+  { value: 45, label: 'Mar' },
+  { value: 80, label: 'Apr' },
+  { value: 55, label: 'May' },
+];
+
+// Chart constants
+const CHART = {
+  left: 28,      // Left margin for y-axis labels
+  right: 95,     // Right edge
+  top: 15,       // Top margin for title
+  bottom: 70,    // X-axis position
+  labelY: 82,    // X-axis label position
+};
+
 // The evolving shape - from blob to refined visualization
 const EvolvingShape: React.FC<{ stage: number; isMoving: boolean }> = ({ stage, isMoving }) => {
-  // Stage 0: Amorphous blob
-  // Stage 1: Slightly more defined blob
-  // Stage 2: Rough rectangles emerging
-  // Stage 3: Clear bar chart shape
-  // Stage 4: Polished bar chart with details
-  // Stage 5: Animated, colorful final visualization
+  const maxValue = Math.max(...BAR_DATA.map(d => d.value));
+  const barWidth = 10;
+  const barGap = (CHART.right - CHART.left - BAR_DATA.length * barWidth) / (BAR_DATA.length - 1);
+
+  const getBarX = (index: number) => CHART.left + index * (barWidth + barGap);
+  const getBarHeight = (value: number) => ((value / maxValue) * (CHART.bottom - CHART.top - 10));
+  const getBarY = (value: number) => CHART.bottom - getBarHeight(value);
 
   const getShapeContent = () => {
     switch (stage) {
@@ -66,152 +85,199 @@ const EvolvingShape: React.FC<{ stage: number; isMoving: boolean }> = ({ stage, 
         );
 
       case 2:
-        // Rough rectangles emerging
+        // Rough bars - BUGGY: bars go below baseline, no axis
         return (
           <motion.svg viewBox="0 0 100 100" className="w-full h-full">
-            <motion.rect x="18" y="45" width="12" height="30" fill={COLORS.prussian} rx="3"
-              animate={{ y: [45, 42, 45], height: [30, 33, 30] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} />
-            <motion.rect x="34" y="30" width="12" height="45" fill={COLORS.prussian} rx="3"
-              animate={{ y: [30, 27, 30], height: [45, 48, 45] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }} />
-            <motion.rect x="50" y="40" width="12" height="35" fill={COLORS.prussian} rx="3"
-              animate={{ y: [40, 37, 40], height: [35, 38, 35] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }} />
-            <motion.rect x="66" y="25" width="12" height="50" fill={COLORS.prussian} rx="3"
-              animate={{ y: [25, 22, 25], height: [50, 53, 50] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }} />
-            {/* Base line, wobbly */}
-            <motion.line x1="15" y1="78" x2="85" y2="78" stroke={COLORS.charcoal} strokeWidth="2"
-              animate={{ y1: [78, 79, 78], y2: [78, 77, 78] }}
-              transition={{ duration: 1, repeat: Infinity }} />
+            {BAR_DATA.map((d, i) => {
+              const x = getBarX(i);
+              // BUG: bars extend 5px below where they should
+              const buggyHeight = getBarHeight(d.value) + 8;
+              const buggyY = CHART.bottom - buggyHeight + 5;
+              return (
+                <motion.rect
+                  key={i}
+                  x={x}
+                  y={buggyY}
+                  width={barWidth}
+                  height={buggyHeight}
+                  fill={COLORS.prussian}
+                  rx="2"
+                  animate={{
+                    y: [buggyY, buggyY - 2, buggyY],
+                    height: [buggyHeight, buggyHeight + 2, buggyHeight]
+                  }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
+                />
+              );
+            })}
+            {/* Wobbly baseline that doesn't align */}
+            <motion.line
+              x1={CHART.left - 5}
+              y1={CHART.bottom + 3}
+              x2={CHART.right}
+              y2={CHART.bottom - 2}
+              stroke={COLORS.charcoal}
+              strokeWidth="2"
+              animate={{ y1: [CHART.bottom + 3, CHART.bottom + 5, CHART.bottom + 3] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
           </motion.svg>
         );
 
       case 3:
-        // Clear bar chart shape with labels starting to appear
+        // Better but still buggy: axis added, but labels overlap/misaligned
         return (
           <motion.svg viewBox="0 0 100 100" className="w-full h-full">
             {/* Y-axis */}
-            <line x1="18" y1="20" x2="18" y2="78" stroke={COLORS.charcoal} strokeWidth="1.5" />
+            <line x1={CHART.left} y1={CHART.top} x2={CHART.left} y2={CHART.bottom} stroke={COLORS.charcoal} strokeWidth="1.5" />
             {/* X-axis */}
-            <line x1="18" y1="78" x2="88" y2="78" stroke={COLORS.charcoal} strokeWidth="1.5" />
-            {/* Bars */}
-            <motion.rect x="24" y="48" width="10" height="28" fill={COLORS.prussian}
-              initial={{ height: 0, y: 76 }}
-              animate={{ height: 28, y: 48 }}
-              transition={{ duration: 0.4 }} />
-            <motion.rect x="38" y="32" width="10" height="44" fill={COLORS.prussian}
-              initial={{ height: 0, y: 76 }}
-              animate={{ height: 44, y: 32 }}
-              transition={{ duration: 0.4, delay: 0.1 }} />
-            <motion.rect x="52" y="42" width="10" height="34" fill={COLORS.prussian}
-              initial={{ height: 0, y: 76 }}
-              animate={{ height: 34, y: 42 }}
-              transition={{ duration: 0.4, delay: 0.2 }} />
-            <motion.rect x="66" y="26" width="10" height="50" fill={COLORS.prussian}
-              initial={{ height: 0, y: 76 }}
-              animate={{ height: 50, y: 26 }}
-              transition={{ duration: 0.4, delay: 0.3 }} />
-            <motion.rect x="80" y="38" width="10" height="38" fill={COLORS.prussian}
-              initial={{ height: 0, y: 76 }}
-              animate={{ height: 38, y: 38 }}
-              transition={{ duration: 0.4, delay: 0.4 }} />
-            {/* Label hints */}
-            <motion.text x="29" y="86" fontSize="6" fill={COLORS.charcoal} textAnchor="middle"
-              initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.5 }}>
-              J
-            </motion.text>
-            <motion.text x="43" y="86" fontSize="6" fill={COLORS.charcoal} textAnchor="middle"
-              initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.6 }}>
-              F
-            </motion.text>
-            <motion.text x="57" y="86" fontSize="6" fill={COLORS.charcoal} textAnchor="middle"
-              initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 0.7 }}>
-              M
-            </motion.text>
+            <line x1={CHART.left} y1={CHART.bottom} x2={CHART.right} y2={CHART.bottom} stroke={COLORS.charcoal} strokeWidth="1.5" />
+
+            {/* Bars - now properly aligned */}
+            {BAR_DATA.map((d, i) => {
+              const x = getBarX(i);
+              const height = getBarHeight(d.value);
+              const y = getBarY(d.value);
+              return (
+                <motion.rect
+                  key={i}
+                  x={x}
+                  width={barWidth}
+                  fill={COLORS.prussian}
+                  initial={{ height: 0, y: CHART.bottom }}
+                  animate={{ height, y }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                />
+              );
+            })}
+
+            {/* BUG: Labels cramped and overlapping */}
+            <text x={CHART.left + 2} y={CHART.labelY} fontSize="5" fill={COLORS.charcoal}>Jan</text>
+            <text x={CHART.left + 14} y={CHART.labelY} fontSize="5" fill={COLORS.charcoal}>Feb</text>
+            <text x={CHART.left + 26} y={CHART.labelY} fontSize="5" fill={COLORS.charcoal}>Mar</text>
+            <text x={CHART.left + 38} y={CHART.labelY - 6} fontSize="5" fill={COLORS.charcoal}>Apr</text>
+            <text x={CHART.left + 50} y={CHART.labelY} fontSize="5" fill={COLORS.charcoal}>May</text>
           </motion.svg>
         );
 
       case 4:
-        // Polished bar chart
+        // Fixed alignment, but still monochrome
         return (
           <motion.svg viewBox="0 0 100 100" className="w-full h-full">
             {/* Y-axis */}
-            <line x1="18" y1="15" x2="18" y2="78" stroke={COLORS.ink} strokeWidth="1.5" />
+            <line x1={CHART.left} y1={CHART.top} x2={CHART.left} y2={CHART.bottom} stroke={COLORS.ink} strokeWidth="1.5" />
             {/* X-axis */}
-            <line x1="18" y1="78" x2="92" y2="78" stroke={COLORS.ink} strokeWidth="1.5" />
-            {/* Y-axis ticks */}
-            <line x1="15" y1="25" x2="18" y2="25" stroke={COLORS.ink} strokeWidth="1" />
-            <line x1="15" y1="50" x2="18" y2="50" stroke={COLORS.ink} strokeWidth="1" />
-            <text x="13" y="27" fontSize="5" fill={COLORS.charcoal} textAnchor="end">100</text>
-            <text x="13" y="52" fontSize="5" fill={COLORS.charcoal} textAnchor="end">50</text>
-            {/* Title */}
-            <text x="55" y="10" fontSize="6" fill={COLORS.ink} textAnchor="middle" fontWeight="bold">Monthly Metrics</text>
-            {/* Bars with different colors */}
-            <motion.rect x="24" y="48" width="10" height="28" fill={COLORS.carmine}
-              whileHover={{ y: 46, height: 30 }} />
-            <motion.rect x="38" y="32" width="10" height="44" fill={COLORS.gold}
-              whileHover={{ y: 30, height: 46 }} />
-            <motion.rect x="52" y="42" width="10" height="34" fill={COLORS.prussian}
-              whileHover={{ y: 40, height: 36 }} />
-            <motion.rect x="66" y="26" width="10" height="50" fill={COLORS.emerald}
-              whileHover={{ y: 24, height: 52 }} />
-            <motion.rect x="80" y="38" width="10" height="38" fill={COLORS.sepia}
-              whileHover={{ y: 36, height: 40 }} />
-            {/* X-axis labels */}
-            <text x="29" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Jan</text>
-            <text x="43" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Feb</text>
-            <text x="57" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Mar</text>
-            <text x="71" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Apr</text>
-            <text x="85" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">May</text>
+            <line x1={CHART.left} y1={CHART.bottom} x2={CHART.right} y2={CHART.bottom} stroke={COLORS.ink} strokeWidth="1.5" />
+
+            {/* Y-axis ticks and labels */}
+            <line x1={CHART.left - 3} y1={CHART.top + 5} x2={CHART.left} y2={CHART.top + 5} stroke={COLORS.ink} strokeWidth="1" />
+            <text x={CHART.left - 5} y={CHART.top + 7} fontSize="5" fill={COLORS.charcoal} textAnchor="end">80</text>
+            <line x1={CHART.left - 3} y1={(CHART.top + CHART.bottom) / 2} x2={CHART.left} y2={(CHART.top + CHART.bottom) / 2} stroke={COLORS.ink} strokeWidth="1" />
+            <text x={CHART.left - 5} y={(CHART.top + CHART.bottom) / 2 + 2} fontSize="5" fill={COLORS.charcoal} textAnchor="end">40</text>
+
+            {/* Bars - properly aligned */}
+            {BAR_DATA.map((d, i) => {
+              const x = getBarX(i);
+              const height = getBarHeight(d.value);
+              const y = getBarY(d.value);
+              return (
+                <rect
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={height}
+                  fill={COLORS.prussian}
+                />
+              );
+            })}
+
+            {/* X-axis labels - properly centered */}
+            {BAR_DATA.map((d, i) => (
+              <text
+                key={i}
+                x={getBarX(i) + barWidth / 2}
+                y={CHART.labelY}
+                fontSize="5"
+                fill={COLORS.ink}
+                textAnchor="middle"
+              >
+                {d.label}
+              </text>
+            ))}
           </motion.svg>
         );
 
       case 5:
-        // Final animated visualization
+        // Final: colored bars, title, polished
+        const barColors = [COLORS.carmine, COLORS.gold, COLORS.prussian, COLORS.emerald, COLORS.sepia];
         return (
           <motion.svg viewBox="0 0 100 100" className="w-full h-full">
-            {/* Y-axis */}
-            <line x1="18" y1="15" x2="18" y2="78" stroke={COLORS.ink} strokeWidth="1.5" />
-            {/* X-axis */}
-            <line x1="18" y1="78" x2="92" y2="78" stroke={COLORS.ink} strokeWidth="1.5" />
-            {/* Grid lines */}
-            <line x1="18" y1="50" x2="92" y2="50" stroke={COLORS.charcoal} strokeWidth="0.5" strokeDasharray="2" opacity={0.3} />
-            <line x1="18" y1="25" x2="92" y2="25" stroke={COLORS.charcoal} strokeWidth="0.5" strokeDasharray="2" opacity={0.3} />
-            {/* Y-axis ticks */}
-            <line x1="15" y1="25" x2="18" y2="25" stroke={COLORS.ink} strokeWidth="1" />
-            <line x1="15" y1="50" x2="18" y2="50" stroke={COLORS.ink} strokeWidth="1" />
-            <text x="13" y="27" fontSize="5" fill={COLORS.charcoal} textAnchor="end">100</text>
-            <text x="13" y="52" fontSize="5" fill={COLORS.charcoal} textAnchor="end">50</text>
             {/* Title */}
-            <text x="55" y="10" fontSize="6" fill={COLORS.ink} textAnchor="middle" fontWeight="bold">Monthly Metrics</text>
-            {/* Animated bars */}
-            <motion.rect x="24" y="48" width="10" height="28" fill={COLORS.carmine}
-              animate={{ y: [48, 46, 48] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
-            <motion.rect x="38" y="32" width="10" height="44" fill={COLORS.gold}
-              animate={{ y: [32, 30, 32] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }} />
-            <motion.rect x="52" y="42" width="10" height="34" fill={COLORS.prussian}
-              animate={{ y: [42, 40, 42] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }} />
-            <motion.rect x="66" y="26" width="10" height="50" fill={COLORS.emerald}
-              animate={{ y: [26, 24, 26] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }} />
-            <motion.rect x="80" y="38" width="10" height="38" fill={COLORS.sepia}
-              animate={{ y: [38, 36, 38] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.8 }} />
+            <text x={(CHART.left + CHART.right) / 2} y={CHART.top - 3} fontSize="6" fill={COLORS.ink} textAnchor="middle" fontWeight="bold">
+              Monthly Metrics
+            </text>
+
+            {/* Grid lines */}
+            <line x1={CHART.left} y1={CHART.top + 5} x2={CHART.right} y2={CHART.top + 5} stroke={COLORS.charcoal} strokeWidth="0.5" strokeDasharray="2" opacity={0.3} />
+            <line x1={CHART.left} y1={(CHART.top + CHART.bottom) / 2} x2={CHART.right} y2={(CHART.top + CHART.bottom) / 2} stroke={COLORS.charcoal} strokeWidth="0.5" strokeDasharray="2" opacity={0.3} />
+
+            {/* Y-axis */}
+            <line x1={CHART.left} y1={CHART.top} x2={CHART.left} y2={CHART.bottom} stroke={COLORS.ink} strokeWidth="1.5" />
+            {/* X-axis */}
+            <line x1={CHART.left} y1={CHART.bottom} x2={CHART.right} y2={CHART.bottom} stroke={COLORS.ink} strokeWidth="1.5" />
+
+            {/* Y-axis ticks and labels */}
+            <line x1={CHART.left - 3} y1={CHART.top + 5} x2={CHART.left} y2={CHART.top + 5} stroke={COLORS.ink} strokeWidth="1" />
+            <text x={CHART.left - 5} y={CHART.top + 7} fontSize="5" fill={COLORS.charcoal} textAnchor="end">80</text>
+            <line x1={CHART.left - 3} y1={(CHART.top + CHART.bottom) / 2} x2={CHART.left} y2={(CHART.top + CHART.bottom) / 2} stroke={COLORS.ink} strokeWidth="1" />
+            <text x={CHART.left - 5} y={(CHART.top + CHART.bottom) / 2 + 2} fontSize="5" fill={COLORS.charcoal} textAnchor="end">40</text>
+
+            {/* Colored bars with subtle animation */}
+            {BAR_DATA.map((d, i) => {
+              const x = getBarX(i);
+              const height = getBarHeight(d.value);
+              const y = getBarY(d.value);
+              return (
+                <motion.rect
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={height}
+                  fill={barColors[i]}
+                  animate={{
+                    y: [y, y - 1, y],
+                    height: [height, height + 1, height]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                />
+              );
+            })}
+
             {/* X-axis labels */}
-            <text x="29" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Jan</text>
-            <text x="43" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Feb</text>
-            <text x="57" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Mar</text>
-            <text x="71" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">Apr</text>
-            <text x="85" y="86" fontSize="5" fill={COLORS.ink} textAnchor="middle">May</text>
-            {/* Sparkle effect */}
-            <motion.circle cx="71" cy="22" r="2" fill={COLORS.gold}
+            {BAR_DATA.map((d, i) => (
+              <text
+                key={i}
+                x={getBarX(i) + barWidth / 2}
+                y={CHART.labelY}
+                fontSize="5"
+                fill={COLORS.ink}
+                textAnchor="middle"
+              >
+                {d.label}
+              </text>
+            ))}
+
+            {/* Sparkle on highest bar */}
+            <motion.circle
+              cx={getBarX(3) + barWidth / 2}
+              cy={getBarY(80) - 4}
+              r="2"
+              fill={COLORS.gold}
               animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 1 }} />
+              transition={{ duration: 1.5, repeat: Infinity, delay: 1 }}
+            />
           </motion.svg>
         );
 
@@ -263,14 +329,14 @@ const ClaudeIcon: React.FC<{ className?: string; isActive?: boolean }> = ({ clas
   </motion.div>
 );
 
-// Feedback labels for each stage
+// Feedback labels for each stage - now reflecting real bugs being fixed
 const STAGE_INFO = [
   { human: '"Here\'s a rough idea..."', claude: 'Starting with a basic shape' },
   { human: '"Can we add some structure?"', claude: 'Defining the outline...' },
-  { human: '"Make it look like a chart"', claude: 'Forming bars...' },
-  { human: '"Add labels and context"', claude: 'Adding axes and text...' },
-  { human: '"Polish it up"', claude: 'Refining colors and details...' },
-  { human: '"Ship it!"', claude: 'Adding final animations!' },
+  { human: '"Bars go below the axis"', claude: 'Adding bars and baseline...' },
+  { human: '"Labels are overlapping"', claude: 'Fixing alignment...' },
+  { human: '"Needs color and polish"', claude: 'Adding colors and details...' },
+  { human: '"Ship it!"', claude: 'Final polish!' },
 ];
 
 export const BuildLoop: React.FC = () => {
@@ -278,52 +344,52 @@ export const BuildLoop: React.FC = () => {
   const [position, setPosition] = useState<'human' | 'center' | 'claude'>('human');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-  const hasAppeared = useRef(false);
+  const playingRef = useRef(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      hasAppeared.current = true;
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, []);
+    if (!isPlaying) {
+      playingRef.current = false;
+      return;
+    }
 
-  useEffect(() => {
-    if (!isPlaying) return;
+    playingRef.current = true;
 
-    // Animation sequence: human -> claude -> human -> claude...
-    // Each exchange advances the stage
     const sequence = async () => {
-      for (let i = stage; i <= 5; i++) {
+      for (let i = 0; i <= 5; i++) {
+        if (!playingRef.current) break;
+
+        setStage(i);
+
         // Move to center from human
         setIsMoving(true);
         setPosition('center');
         await new Promise(r => setTimeout(r, 400));
+        if (!playingRef.current) break;
 
         // Move to Claude
         setPosition('claude');
         await new Promise(r => setTimeout(r, 400));
         setIsMoving(false);
+        if (!playingRef.current) break;
 
         // Claude "works" on it
         await new Promise(r => setTimeout(r, 800));
-
-        // Advance stage (Claude improved it)
-        if (i < 5) {
-          setStage(i + 1);
-        }
+        if (!playingRef.current) break;
 
         // Move back to center
         setIsMoving(true);
         setPosition('center');
         await new Promise(r => setTimeout(r, 400));
+        if (!playingRef.current) break;
 
         // Move to human
         setPosition('human');
         await new Promise(r => setTimeout(r, 400));
         setIsMoving(false);
+        if (!playingRef.current) break;
 
         // Human reviews
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 800));
 
         if (i === 5) {
           setIsPlaying(false);
@@ -333,20 +399,16 @@ export const BuildLoop: React.FC = () => {
     };
 
     sequence();
+
+    return () => {
+      playingRef.current = false;
+    };
   }, [isPlaying]);
 
   const handlePlay = () => {
     setStage(0);
     setPosition('human');
     setIsPlaying(true);
-  };
-
-  const getPositionX = () => {
-    switch (position) {
-      case 'human': return 'translateX(0%)';
-      case 'center': return 'translateX(calc(50vw - 50% - 1rem))';
-      case 'claude': return 'translateX(calc(100% + 4rem))';
-    }
   };
 
   return (
@@ -407,20 +469,11 @@ export const BuildLoop: React.FC = () => {
         <div className="absolute left-20 md:left-24 top-1/2 -translate-y-1/2">
           <motion.div
             animate={{
-              x: position === 'human' ? 0 : position === 'center' ? 'calc(50vw - 12rem)' : 'calc(100vw - 20rem)',
+              x: position === 'human' ? 0 : position === 'claude' ? 'min(180px, calc(100vw - 22rem))' : 'min(90px, calc(50vw - 11rem))',
             }}
             transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-            className="relative"
-            style={{ maxWidth: 'calc(100vw - 16rem)' }}
           >
-            <motion.div
-              animate={{
-                x: position === 'human' ? 0 : position === 'claude' ? 'min(200px, calc(100vw - 20rem))' : 'min(100px, calc(50vw - 10rem))',
-              }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-            >
-              <EvolvingShape stage={stage} isMoving={isMoving} />
-            </motion.div>
+            <EvolvingShape stage={stage} isMoving={isMoving} />
           </motion.div>
         </div>
 
@@ -532,9 +585,13 @@ export const BuildLoop: React.FC = () => {
         <p className="text-xs font-mono text-dubois-charcoal max-w-md mx-auto">
           {stage === 0
             ? 'Every visualization starts as a shapeless idea. Click play to watch it evolve.'
-            : stage === 5
-              ? 'Six exchanges. From blob to polished, interactive visualization.'
-              : 'Human feedback shapes each iteration. Claude handles the implementation.'}
+            : stage === 2
+              ? 'Notice the bars extend below the baseline? Human review catches these bugs.'
+              : stage === 3
+                ? 'Labels are cramped and overlapping. Another round of feedback.'
+                : stage === 5
+                  ? 'Six exchanges. From blob to polished, interactive visualization.'
+                  : 'Human feedback shapes each iteration. Claude handles the implementation.'}
         </p>
       </div>
     </div>
