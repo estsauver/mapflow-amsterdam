@@ -13,6 +13,7 @@ const COLORS = {
   cream: '#F5F0E6',
   sepia: '#8B4513',
   burgundy: '#800020',
+  claudeOrange: '#DA7756',
 };
 
 // Bar data - consistent across stages
@@ -311,7 +312,8 @@ const HumanIcon: React.FC<{ className?: string; isActive?: boolean }> = ({ class
 // Claude icon
 const ClaudeIcon: React.FC<{ className?: string; isActive?: boolean }> = ({ className = '', isActive }) => (
   <motion.div
-    className={`w-12 h-12 md:w-16 md:h-16 bg-dubois-prussian flex items-center justify-center ${className}`}
+    className={`w-12 h-12 md:w-16 md:h-16 flex items-center justify-center ${className}`}
+    style={{ backgroundColor: COLORS.claudeOrange }}
     animate={isActive ? { scale: [1, 1.1, 1] } : {}}
     transition={{ duration: 0.3 }}
   >
