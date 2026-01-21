@@ -88,10 +88,6 @@ Framer Motion handles the animation orchestration. Its scroll hooks and spring p
 
 The reason this workflow matters is that it changes who can make this kind of work.
 
-Researchers with deep domain expertise but no design background can now build explanatory visualizations that do justice to their ideas. Technical writers can create interactive documentation that shows rather than tells. Educators can build the kind of exploratory tools that help concepts click. Developers can add polish to their technical posts without learning a graphics toolkit.
-
-The common thread: people who have something to say but previously lacked the tools to say it visually. That gap has narrowed dramatically.
-
 The bottleneck has shifted. It's no longer "can I build this?" It's "what should I show?" That's a better problem to have. The constraint is now the quality of your ideas, not the tools at your disposal.
 
 I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch. His work reflects years of accumulated craft and a visual intuition that I don't have. But for the rest of us, the floor has come up dramatically. Work that used to require either rare skills or a dedicated team is now accessible to anyone with taste, patience for iteration, and access to Claude.

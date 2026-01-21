@@ -57,27 +57,30 @@ export const DataMorph: React.FC = () => {
   const getPosition = (d: typeof DATA[0], index: number) => {
     switch (viewMode) {
       case 'bars': {
-        const x = getBarX(index) + barWidth / 2;
+        const x = getBarX(index);
         const height = getBarHeight(d.value);
-        const y = CHART.bottom - height / 2;
-        return { cx: x, cy: y, rx: barWidth / 2, ry: height / 2 };
+        const y = CHART.bottom - height;
+        return { x, y, width: barWidth, height, rx: 1 };
       }
       case 'scatter': {
-        const x = CHART.left + (d.x / 100) * (CHART.right - CHART.left);
-        const y = CHART.bottom - (d.y / 100) * (CHART.bottom - CHART.top);
-        return { cx: x, cy: y, rx: 5, ry: 5 };
+        const cx = CHART.left + (d.x / 100) * (CHART.right - CHART.left);
+        const cy = CHART.bottom - (d.y / 100) * (CHART.bottom - CHART.top);
+        const size = 10;
+        return { x: cx - size/2, y: cy - size/2, width: size, height: size, rx: size/2 };
       }
       case 'line': {
-        const x = CHART.left + (d.x / 100) * (CHART.right - CHART.left);
-        const y = CHART.bottom - (d.y / 100) * (CHART.bottom - CHART.top);
-        return { cx: x, cy: y, rx: 4, ry: 4 };
+        const cx = CHART.left + (d.x / 100) * (CHART.right - CHART.left);
+        const cy = CHART.bottom - (d.y / 100) * (CHART.bottom - CHART.top);
+        const size = 8;
+        return { x: cx - size/2, y: cy - size/2, width: size, height: size, rx: size/2 };
       }
       case 'radial': {
         const angle = (index / DATA.length) * 2 * Math.PI - Math.PI / 2;
         const radius = 12 + (d.value / maxValue) * 18;
-        const x = CHART.centerX + Math.cos(angle) * radius;
-        const y = CHART.centerY + Math.sin(angle) * radius;
-        return { cx: x, cy: y, rx: 5, ry: 5 };
+        const cx = CHART.centerX + Math.cos(angle) * radius;
+        const cy = CHART.centerY + Math.sin(angle) * radius;
+        const size = 10;
+        return { x: cx - size/2, y: cy - size/2, width: size, height: size, rx: size/2 };
       }
     }
   };
@@ -97,13 +100,13 @@ export const DataMorph: React.FC = () => {
     const pos = getPosition(d, index);
     switch (viewMode) {
       case 'bars':
-        return { x: pos.cx, y: CHART.bottom + 8 };
+        return { x: pos.x + pos.width / 2, y: CHART.bottom + 8 };
       case 'scatter':
       case 'line':
-        return { x: pos.cx, y: pos.cy - 8 };
+        return { x: pos.x + pos.width / 2, y: pos.y - 4 };
       case 'radial': {
         const angle = (index / DATA.length) * 2 * Math.PI - Math.PI / 2;
-        const labelRadius = 12 + (d.value / maxValue) * 18 + 8;
+        const labelRadius = 12 + (d.value / maxValue) * 18 + 10;
         return {
           x: CHART.centerX + Math.cos(angle) * labelRadius,
           y: CHART.centerY + Math.sin(angle) * labelRadius + 2,
@@ -206,15 +209,16 @@ export const DataMorph: React.FC = () => {
           {DATA.map((d, i) => {
             const pos = getPosition(d, i);
             return (
-              <motion.ellipse
+              <motion.rect
                 key={d.label}
                 fill={POINT_COLORS[i]}
                 initial={false}
                 animate={{
-                  cx: pos.cx,
-                  cy: pos.cy,
+                  x: pos.x,
+                  y: pos.y,
+                  width: pos.width,
+                  height: pos.height,
                   rx: pos.rx,
-                  ry: pos.ry,
                 }}
                 transition={{ type: 'spring', stiffness: 120, damping: 14 }}
               />
