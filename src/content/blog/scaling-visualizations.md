@@ -5,9 +5,7 @@ description: "How Claude Code changed what's possible for interactive explanatio
 slug: "scaling-visualizations"
 ---
 
-People take work with visualizations more seriously. They always have. A well-crafted interactive explanation signals that someone has put real time and effort into understanding what they're trying to communicate. It earns a kind of trust that prose alone doesn't.
-
-Everyone who's ever worked on the front end has a copy of Edward Tufte's visualization book somewhere. Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) is the modern version of that aspiration. I find myself fascinated by his explanations, and I implicitly trust his technical descriptions because of the obvious care in the animation, illustration, and storytelling.
+Bartosz Ciechanowski's work at [ciechanow.ski](https://ciechanow.ski/) sets a standard that most of us can only admire from a distance. His explanations of mechanical watches, GPS, or bicycle physics aren't just informative—they're persuasive in a way that static text can't match. You trust his technical descriptions because of the obvious care in every animation, illustration, and interactive element. That level of craft has always required either deep design skills or a team.
 
 I've been building interactive visualizations for blog posts using Claude Code—both here and at [fibonaccibio.com/blog](https://fibonaccibio.com/blog)—and the workflow has changed what I think is possible. When you have access to a phenomenal engineer who's willing to do the tedious work, it makes sense to ask for something more ambitious than a static diagram.
 
@@ -18,7 +16,7 @@ This is a short description of how that process works.
 
 ## The workflow starts during writing
 
-The process doesn't begin when I'm done with a blog post and decide to jazz it up. It happens while I'm writing, when I notice something isn't quite working—a concept that's difficult to explain, a description that feels flat, a moment where I'm reaching for tools that aren't suited to what I'm trying to say.
+The process doesn't begin when I'm done with a blog post and decide to add visuals. It happens while I'm writing, when I notice something isn't quite working—a concept that's difficult to explain, a description that feels flat, a moment where I'm reaching for tools that aren't suited to what I'm trying to say.
 
 Sometimes a visualization is the answer when a section is just getting boring and needs something to break up the monotony. But more often, the real candidates are descriptions of things that unfold over time, or relationships that are easier to explore in a small simulator than to parse in prose. These aren't decorations. They're a faster, more engaging way to help someone actually understand an idea.
 
@@ -30,9 +28,11 @@ Claude is a phenomenal engineer. It's also, by default, a conservative one.
 
 Left to its own devices, Claude will propose the safe option: a static diagram, a simple chart, a table that technically conveys the information. This isn't a flaw exactly—it's trying to be helpful without overcommitting your time or resources. But it means you have to explicitly unlock the more ambitious work.
 
-I tell Claude, directly, that I'm willing to put real effort into this. That I want it to think about whether the concept would be better served by something interactive, something animated, something a reader can play with. I tell it to make things spicy. This sounds simple, but it matters. Without that nudge, Claude will forget what it's capable of and default to the path of least resistance.
+I tell Claude, directly, that I'm willing to put real effort into this. Here's the kind of prompt that works:
 
-The other thing I've learned is that you have to give Claude permission to spend your compute. It has an instinct to be efficient, to wrap things up quickly, to not ask for too much. When you're building visualizations, that instinct works against you. I'd rather Claude take three passes at getting an animation right than ship something underwhelming on the first try.
+> I want this visualization to be genuinely good, not just functional. Think about what would make someone pause and actually engage with it. Consider animation, interactivity, or letting the reader explore the concept themselves. Don't optimize for simplicity—optimize for insight. Take as many iterations as you need.
+
+This matters more than it might seem. Without that explicit permission, Claude defaults to the path of least resistance. It has an instinct to be efficient, to wrap things up quickly, to not ask for too much. When you're building visualizations, that instinct works against you. I'd rather Claude take three passes at getting an animation right than ship something underwhelming on the first try.
 
 ## The human review loop
 
@@ -50,16 +50,50 @@ The visualizations I build with Claude use Framer Motion and raw SVG. No chartin
 
 This choice gets made between me and Claude at the start of a visualization. We talk through what we're trying to show, and Claude proposes an approach. Charting libraries exist precisely because building visualizations from scratch is tedious. But they also constrain what's possible. When you want a scatter plot that morphs into a parallel coordinates chart, or a beeswarm plot with custom physics, or scroll-triggered animations that respond to exactly the right viewport positions, you end up fighting the library more than using it.
 
-The cost of picking the wrong abstraction is low now. If we start down a path and it's not working, we go back to the drawing board and rebuild. Claude makes that cheap. This changes the calculus: you can try the more ambitious approach first, knowing that you're not committed to it if the implementation gets ugly.
+Here's what that actually looks like in practice:
 
-Claude handles the math from scratch: coordinate transformations, scaling functions, path generation, positioning algorithms. It turns out this is exactly the kind of work Claude is good at. The code is more verbose than a library call, but it's also completely transparent. When something looks wrong, I can read the geometry and understand why.
+```visualization:data-morph
+```
+
+Try doing that smooth transition between a bar chart, scatter plot, line graph, and radial view with a charting library. You'd spend more time working around the abstraction than building the feature.
+
+The raw SVG approach means code like this:
+
+```typescript
+// Position calculation for bar chart view
+const getBarPosition = (value: number, index: number) => {
+  const barWidth = 10;
+  const barGap = (chartWidth - data.length * barWidth) / (data.length + 1);
+  const x = barGap + index * (barWidth + barGap);
+  const height = (value / maxValue) * chartHeight;
+  const y = chartBottom - height;
+  return { x, y, width: barWidth, height };
+};
+
+// Same data, scatter plot view
+const getScatterPosition = (point: DataPoint) => {
+  const x = (point.x / 100) * chartWidth;
+  const y = chartBottom - (point.y / 100) * chartHeight;
+  return { x, y };
+};
+```
+
+Claude handles this math from scratch: coordinate transformations, scaling functions, path generation, positioning algorithms. The code is more verbose than a library call, but it's also completely transparent. When something looks wrong, I can read the geometry and understand why.
+
+The cost of picking the wrong abstraction is low now. If we start down a path and it's not working, we go back to the drawing board and rebuild. Claude makes that cheap. This changes the calculus: you can try the more ambitious approach first, knowing that you're not committed to it if the implementation gets ugly.
 
 Framer Motion handles the animation orchestration. Its scroll hooks and spring physics give you the polished feel without writing your own animation loop. The combination—Framer Motion for motion, raw SVG for rendering, Claude for the math—has been the right trade-off between flexibility and effort.
 
 ## The unlock
 
-The reason this workflow matters is that it changes who can make this kind of work. Publication-quality interactive visualizations used to require either design skills I don't have or a team I'd need to coordinate. Now they require taste, patience for iteration, and access to Claude.
+The reason this workflow matters is that it changes who can make this kind of work.
+
+Researchers with deep domain expertise but no design background can now build explanatory visualizations that do justice to their ideas. Technical writers can create interactive documentation that shows rather than tells. Educators can build the kind of exploratory tools that help concepts click. Developers can add polish to their technical posts without learning a graphics toolkit.
+
+The common thread: people who have something to say but previously lacked the tools to say it visually. That gap has narrowed dramatically.
 
 The bottleneck has shifted. It's no longer "can I build this?" It's "what should I show?" That's a better problem to have. The constraint is now the quality of your ideas, not the tools at your disposal.
 
-I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch. But for the rest of us, the floor has come up dramatically. Work that would have been out of reach is now just a matter of sitting down and doing it.
+I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch—his work reflects years of accumulated craft and a visual intuition that I don't have. But for the rest of us, the floor has come up dramatically. Work that used to require either rare skills or a dedicated team is now accessible to anyone with taste, patience for iteration, and access to Claude.
+
+That's a meaningful change. Not because it creates more noise—though it might—but because it means more people can participate in the kind of careful, visual explanation that actually helps others understand complex ideas. The best technical communication has always been visual. Now more of us can do it.
