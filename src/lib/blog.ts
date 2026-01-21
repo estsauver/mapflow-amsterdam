@@ -57,9 +57,9 @@ const rawPosts: { raw: string; defaultSlug: string }[] = [
   { raw: claudeCodeWorkflow, defaultSlug: 'claude-code-workflow' },
 ];
 
-export const posts: BlogPost[] = rawPosts.map(({ raw, defaultSlug }) =>
-  parsePost(raw, defaultSlug)
-);
+export const posts: BlogPost[] = rawPosts
+  .map(({ raw, defaultSlug }) => parsePost(raw, defaultSlug))
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 export function getAllPosts(): BlogPost[] {
   return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
