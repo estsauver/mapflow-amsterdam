@@ -11,6 +11,7 @@ import {
   NamespaceArchitecture,
   DatabaseBranching,
   PipelineOverview,
+  BuildLoop,
 } from '../components/blog/visualizations';
 
 interface TocItem {
@@ -395,6 +396,8 @@ const BlogPost = () => {
                       case 'pipeline-overview':
                       case 'pipeline-stages':
                         return <div className="my-8 not-prose"><PipelineOverview /></div>;
+                      case 'build-loop':
+                        return <div className="my-8 not-prose"><BuildLoop /></div>;
                       default:
                         return null;
                     }
@@ -419,6 +422,8 @@ const BlogPost = () => {
                     case 'pipeline-overview':
                     case 'pipeline-stages':
                       return <div className="my-8 not-prose"><PipelineOverview /></div>;
+                    case 'build-loop':
+                      return <div className="my-8 not-prose"><BuildLoop /></div>;
                     default:
                       return null;
                   }
