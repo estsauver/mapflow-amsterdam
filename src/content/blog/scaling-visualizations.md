@@ -92,4 +92,4 @@ The bottleneck has shifted. It's no longer "can I build this?" It's "what should
 
 I don't think this makes designers or visualization specialists obsolete. Someone like Bartosz Ciechanowski is still operating at a level I can't touch. His work reflects years of accumulated craft and a visual intuition that I don't have. But for the rest of us, the floor has come up dramatically. Work that used to require either rare skills or a dedicated team is now accessible to anyone with taste, patience for iteration, and access to Claude.
 
-That's a meaningful change. Not because it creates more noise (though it might) but because it means more people can participate in the kind of careful, visual explanation that actually helps others understand complex ideas. The best technical communication has always been visual. Now more of us can do it.
+That's a meaningful change. Almost everyone can now make careful visual explanations that are useful and at least visually engaging. The best technical communication has always been visual. Now more of us can do it in a reasonable amount of time without feeling like we're just burning hours.
