@@ -1,5 +1,6 @@
 import claudeCodeWorkflow from '../content/blog/claude-code-workflow.md?raw';
 import demoCreator from '../content/blog/demo-creator.md?raw';
+import scalingVisualizations from '../content/blog/scaling-visualizations.md?raw';
 
 export interface BlogPost {
   slug: string;
@@ -51,6 +52,7 @@ function parsePost(rawContent: string, defaultSlug: string): BlogPost {
 
 // All blog posts - add new posts here
 const rawPosts: { raw: string; defaultSlug: string }[] = [
+  { raw: scalingVisualizations, defaultSlug: 'scaling-visualizations' },
   { raw: demoCreator, defaultSlug: 'demo-creator' },
   { raw: claudeCodeWorkflow, defaultSlug: 'claude-code-workflow' },
 ];
