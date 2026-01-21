@@ -233,24 +233,19 @@ const EvolvingShape: React.FC<{ stage: number; isMoving: boolean }> = ({ stage, 
             <line x1={CHART.left - 3} y1={(CHART.top + CHART.bottom) / 2} x2={CHART.left} y2={(CHART.top + CHART.bottom) / 2} stroke={COLORS.ink} strokeWidth="1" />
             <text x={CHART.left - 5} y={(CHART.top + CHART.bottom) / 2 + 2} fontSize="5" fill={COLORS.charcoal} textAnchor="end">40</text>
 
-            {/* Colored bars with subtle animation */}
+            {/* Colored bars - static, properly aligned */}
             {BAR_DATA.map((d, i) => {
               const x = getBarX(i);
               const height = getBarHeight(d.value);
               const y = getBarY(d.value);
               return (
-                <motion.rect
+                <rect
                   key={i}
                   x={x}
                   y={y}
                   width={barWidth}
                   height={height}
                   fill={barColors[i]}
-                  animate={{
-                    y: [y, y - 1, y],
-                    height: [height, height + 1, height]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
                 />
               );
             })}
