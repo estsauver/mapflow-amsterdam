@@ -48,7 +48,7 @@ One thing that does parallelize well: generating options. I'll often ask Claude 
 
 The visualizations I build with Claude use Framer Motion and raw SVG. No charting libraries. No D3. No Recharts or Chart.js.
 
-This choice gets made between me and Claude at the start of a visualization. We talk through what we're trying to show, and Claude proposes an approach. Charting libraries exist precisely because building visualizations from scratch is tedious. But they also constrain what's possible. When you want a scatter plot that morphs into a parallel coordinates chart, or a beeswarm plot with custom physics, or scroll-triggered animations that respond to exactly the right viewport positions, you end up fighting the library more than using it.
+This isn't a rigid choice. If D3 has a great option for something, we use it. But with Claude and Framer Motion, I have flexibility I didn't have before. Charting libraries exist because building visualizations from scratch is tedious. But they also constrain what's possible. When you want a scatter plot that morphs into a parallel coordinates chart, or a beeswarm plot with custom physics, or scroll-triggered animations that respond to exactly the right viewport positions, you end up fighting the library more than using it.
 
 Here's what that actually looks like in practice:
 
