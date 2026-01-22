@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 // Du Bois color palette
@@ -154,19 +154,15 @@ const NamespaceBox: React.FC<{
   );
 };
 
-// Module-level variable to persist animation state across remounts
-let hasAnimatedOnce = false;
-
 export const NamespaceArchitecture: React.FC = () => {
   const [hoveredNamespace, setHoveredNamespace] = useState<string | null>(null);
-  const [hasAppeared, setHasAppeared] = useState(hasAnimatedOnce);
+  const hasAppeared = useRef(false);
 
   // Mark as appeared after initial mount
   useEffect(() => {
-    if (hasAnimatedOnce) return;
+    // Small delay to let initial animations complete
     const timeout = setTimeout(() => {
-      hasAnimatedOnce = true;
-      setHasAppeared(true);
+      hasAppeared.current = true;
     }, 500);
     return () => clearTimeout(timeout);
   }, []);
@@ -232,9 +228,9 @@ export const NamespaceArchitecture: React.FC = () => {
                 stroke={isActive ? 'url(#connectionGradient)' : `${COLORS.charcoal}30`}
                 strokeWidth={isActive ? 3 : 1}
                 strokeDasharray={isActive ? '0' : '4 4'}
-                initial={hasAppeared ? false : { pathLength: 0 }}
+                initial={hasAppeared.current ? false : { pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: hasAppeared ? 0 : 0.5, delay: hasAppeared ? 0 : index * 0.2 }}
+                transition={{ duration: hasAppeared.current ? 0 : 0.5, delay: hasAppeared.current ? 0 : index * 0.2 }}
               />
             );
           })}
@@ -251,7 +247,7 @@ export const NamespaceArchitecture: React.FC = () => {
               isOtherHovered={hoveredNamespace !== null && hoveredNamespace !== 'infra'}
               onHover={(hovering) => setHoveredNamespace(hovering ? 'infra' : null)}
               connectionActive={false}
-              hasAppeared={hasAppeared}
+              hasAppeared={hasAppeared.current}
             />
           </div>
         </div>
@@ -282,7 +278,7 @@ export const NamespaceArchitecture: React.FC = () => {
               isOtherHovered={hoveredNamespace !== null && hoveredNamespace !== wt.name && hoveredNamespace !== 'infra'}
               onHover={(hovering) => setHoveredNamespace(hovering ? wt.name : null)}
               connectionActive={hoveredNamespace === 'infra'}
-              hasAppeared={hasAppeared}
+              hasAppeared={hasAppeared.current}
             />
           ))}
         </div>
