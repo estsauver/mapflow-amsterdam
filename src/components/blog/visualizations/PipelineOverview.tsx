@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 // Du Bois color palette
@@ -211,13 +211,18 @@ const Arrow: React.FC<{ delay: number; hasAppeared: boolean }> = ({ delay, hasAp
   </motion.div>
 );
 
+// Module-level variable to persist animation state across remounts
+let hasAnimatedOnce = false;
+
 export const PipelineOverview: React.FC = () => {
   const [hoveredStage, setHoveredStage] = useState<number | null>(null);
-  const hasAppeared = useRef(false);
+  const [hasAppeared, setHasAppeared] = useState(hasAnimatedOnce);
 
   useEffect(() => {
+    if (hasAnimatedOnce) return;
     const timeout = setTimeout(() => {
-      hasAppeared.current = true;
+      hasAnimatedOnce = true;
+      setHasAppeared(true);
     }, 1500);
     return () => clearTimeout(timeout);
   }, []);
@@ -259,10 +264,10 @@ export const PipelineOverview: React.FC = () => {
                 isHovered={hoveredStage === stage.id}
                 onHover={(hovering) => setHoveredStage(hovering ? stage.id : null)}
                 delay={index * 0.1}
-                hasAppeared={hasAppeared.current}
+                hasAppeared={hasAppeared}
               />
               {index < 4 && (
-                <Arrow delay={(index + 1) * 0.1} hasAppeared={hasAppeared.current} />
+                <Arrow delay={(index + 1) * 0.1} hasAppeared={hasAppeared} />
               )}
             </React.Fragment>
           ))}
@@ -276,9 +281,9 @@ export const PipelineOverview: React.FC = () => {
             viewBox="0 0 24 24"
             stroke={COLORS.charcoal}
             strokeWidth={2}
-            initial={hasAppeared.current ? false : { opacity: 0 }}
+            initial={hasAppeared ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: hasAppeared.current ? 0 : 0.5 }}
+            transition={{ delay: hasAppeared ? 0 : 0.5 }}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
           </motion.svg>
@@ -293,10 +298,10 @@ export const PipelineOverview: React.FC = () => {
                 isHovered={hoveredStage === stage.id}
                 onHover={(hovering) => setHoveredStage(hovering ? stage.id : null)}
                 delay={0.5 + index * 0.1}
-                hasAppeared={hasAppeared.current}
+                hasAppeared={hasAppeared}
               />
               {index < 3 && (
-                <Arrow delay={0.5 + (index + 1) * 0.1} hasAppeared={hasAppeared.current} />
+                <Arrow delay={0.5 + (index + 1) * 0.1} hasAppeared={hasAppeared} />
               )}
             </React.Fragment>
           ))}
@@ -330,10 +335,10 @@ export const PipelineOverview: React.FC = () => {
                       isHovered={hoveredStage === stage.id}
                       onHover={(hovering) => setHoveredStage(hovering ? stage.id : null)}
                       delay={phaseIndex * 0.3 + index * 0.1}
-                      hasAppeared={hasAppeared.current}
+                      hasAppeared={hasAppeared}
                     />
                     {index < phaseStages.length - 1 && (
-                      <Arrow delay={phaseIndex * 0.3 + (index + 1) * 0.1} hasAppeared={hasAppeared.current} />
+                      <Arrow delay={phaseIndex * 0.3 + (index + 1) * 0.1} hasAppeared={hasAppeared} />
                     )}
                   </React.Fragment>
                 ))}
@@ -348,9 +353,9 @@ export const PipelineOverview: React.FC = () => {
                     viewBox="0 0 24 24"
                     stroke={COLORS.charcoal}
                     strokeWidth={2}
-                    initial={hasAppeared.current ? false : { opacity: 0 }}
+                    initial={hasAppeared ? false : { opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: hasAppeared.current ? 0 : (phaseIndex + 1) * 0.3 }}
+                    transition={{ delay: hasAppeared ? 0 : (phaseIndex + 1) * 0.3 }}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                   </motion.svg>
