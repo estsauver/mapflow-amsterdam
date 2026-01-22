@@ -58,6 +58,11 @@ const AmsterdamMap = () => {
     setIsVisible(false);
     currentLocationIndex.current = index;
 
+    // For fast flights, preload destination tiles before starting animation
+    if (fast) {
+      preloadTilesForLocation(LOCATIONS[index]);
+    }
+
     mapInstance.current.flyTo({
       center: LOCATIONS[index].coordinates,
       zoom: LOCATIONS[index].zoom,
@@ -94,6 +99,30 @@ const AmsterdamMap = () => {
     flyToLocation(prevIndex, fast);
   };
 
+  // Preload tiles for a specific location without moving the camera
+  const preloadTilesForLocation = (location: Location) => {
+    if (!mapInstance.current) return;
+
+    mapInstance.current.easeTo({
+      center: location.coordinates,
+      zoom: location.zoom,
+      pitch: 45,
+      bearing: -17.6,
+      duration: 0,
+      preloadOnly: true
+    });
+  };
+
+  // Preload tiles for all locations to improve fly animation smoothness
+  const preloadAllLocations = () => {
+    LOCATIONS.forEach((location, index) => {
+      // Stagger the preloads slightly to avoid overwhelming the network
+      setTimeout(() => {
+        preloadTilesForLocation(location);
+      }, index * 500);
+    });
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -122,7 +151,9 @@ const AmsterdamMap = () => {
       pitch: 45,
       bearing: -17.6,
       antialias: true,
-      interactive: false
+      interactive: false,
+      // Increase tile cache to improve loading during fly animations
+      maxTileCacheSize: 200
     });
 
     mapInstance.current.on('load', () => {
@@ -134,6 +165,9 @@ const AmsterdamMap = () => {
         'high-color': 'rgb(210, 180, 140)', // Tan
         'horizon-blend': 0.2,
       });
+
+      // Preload tiles for all locations to improve fly animation smoothness
+      preloadAllLocations();
 
       // Start the animation cycle after initial load with a delay
       setTimeout(() => {
