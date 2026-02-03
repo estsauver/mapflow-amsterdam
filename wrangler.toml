@@ -1,0 +1,17 @@
+# Cloudflare Pages Configuration
+# This configures D1 database bindings for the Pages Functions
+
+name = "mapflow-amsterdam"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+# To set up:
+# 1. Create the database: wrangler d1 create blog-comments
+# 2. Copy the database_id from the output and paste it below
+# 3. Run migrations: wrangler d1 execute blog-comments --file=./schema.sql
+# 4. For local dev: wrangler d1 execute blog-comments --local --file=./schema.sql
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blog-comments"
+database_id = "YOUR_DATABASE_ID_HERE" # Replace after running: wrangler d1 create blog-comments

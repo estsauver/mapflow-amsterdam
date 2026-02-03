@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { getPostBySlug } from '../lib/blog';
 import DuBoisColorBar from '../components/DuBoisColorBar';
+import CommentsSection from '../components/blog/CommentsSection';
 import {
   PortCollision,
   NamespaceArchitecture,
@@ -520,6 +521,9 @@ const BlogPost = () => {
             </div>
           </div>
         </footer>
+
+        {/* Comments section */}
+        <CommentsSection postSlug={post.slug} />
       </article>
     </div>
   );
