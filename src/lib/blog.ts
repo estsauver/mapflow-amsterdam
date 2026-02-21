@@ -1,6 +1,5 @@
 import claudeCodeWorkflow from '../content/blog/claude-code-workflow.md?raw';
 import demoCreator from '../content/blog/demo-creator.md?raw';
-import nonfatalDecisions from '../content/blog/nonfatal-decisions.md?raw';
 import scalingVisualizations from '../content/blog/scaling-visualizations.md?raw';
 import thinkFirstDiffuseFast from '../content/blog/think-first-diffuse-fast.md?raw';
 
@@ -55,7 +54,6 @@ function parsePost(rawContent: string, defaultSlug: string): BlogPost {
 // All blog posts - add new posts here
 const rawPosts: { raw: string; defaultSlug: string }[] = [
   { raw: thinkFirstDiffuseFast, defaultSlug: 'think-first-diffuse-fast' },
-  { raw: nonfatalDecisions, defaultSlug: 'nonfatal-decisions' },
   { raw: scalingVisualizations, defaultSlug: 'scaling-visualizations' },
   { raw: demoCreator, defaultSlug: 'demo-creator' },
   { raw: claudeCodeWorkflow, defaultSlug: 'claude-code-workflow' },
