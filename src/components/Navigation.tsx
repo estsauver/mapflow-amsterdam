@@ -3,12 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AboutDialog from './AboutDialog';
 import ProjectsDialog from './ProjectsDialog';
 import ContactDialog from './ContactDialog';
+import ResearchDialog from './ResearchDialog';
 import DuBoisColorBar from './DuBoisColorBar';
 
 const Navigation = () => {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [researchOpen, setResearchOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +63,10 @@ const Navigation = () => {
     navigate('/projects');
   };
 
+  const handleOpenResearch = () => {
+    setResearchOpen(true);
+  };
+
   return (
     <>
       <nav className="fixed top-8 right-8 z-10">
@@ -99,6 +105,14 @@ const Navigation = () => {
                 </button>
               </li>
               <li>
+                <button
+                  onClick={handleOpenResearch}
+                  className="dubois-btn dubois-btn-secondary w-full text-left text-sm"
+                >
+                  Research
+                </button>
+              </li>
+              <li>
                 <Link
                   to="/blog"
                   className="dubois-btn dubois-btn-secondary w-full text-left text-sm block"
@@ -113,6 +127,7 @@ const Navigation = () => {
       <AboutDialog open={aboutOpen} onOpenChange={handleAboutOpenChange} />
       <ProjectsDialog open={projectsOpen} onOpenChange={handleProjectsOpenChange} />
       <ContactDialog open={contactOpen} onOpenChange={handleContactOpenChange} />
+      <ResearchDialog open={researchOpen} onOpenChange={setResearchOpen} />
     </>
   );
 };
