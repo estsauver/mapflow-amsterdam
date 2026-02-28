@@ -369,9 +369,9 @@ export const PipelineOverview: React.FC = () => {
       {/* Hover description */}
       <motion.div
         className="mt-6 h-12 flex items-center justify-center"
-        initial={hasAppeared ? false : { opacity: 0 }}
+        initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: hasAppeared ? 0 : 1 }}
+        transition={{ delay: 1 }}
       >
         {hoveredStage && (
           <motion.div
