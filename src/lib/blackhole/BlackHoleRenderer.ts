@@ -322,7 +322,7 @@ export class BlackHoleRenderer {
     // Time the whole frame on the GPU when the extension exists; results are read
     // back a few frames later in pollGpuTimers().
     let query: WebGLQuery | null = null;
-    if (this.timerExt && this.running && this.pendingQueries.length < 8) {
+    if (this.timerExt && this.running && !this.opts.reducedMotion && this.pendingQueries.length < 8) {
       query = gl.createQuery();
       if (query) gl.beginQuery(this.timerExt.TIME_ELAPSED_EXT, query);
     }

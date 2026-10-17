@@ -10,6 +10,7 @@ const demo = (): GameProgram => {
     id: 'demo',
     update(dt: number, input: Input) {
       t += dt;
+      if (input.frame.width !== 960 || input.frame.height !== 540) throw new Error('frame size missing from input');
       if (input.pointer.justPressed) clicks++;
       if (input.keysJustPressed.has('Enter')) clicks += 10;
     },

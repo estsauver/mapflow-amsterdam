@@ -8,6 +8,7 @@ export interface FrameInput {
   /** Desired virtual (rendered) height in pixels; clamped to the device height. */
   virtualHeight: number;
   maxDeviceWidth?: number;
+  maxDeviceHeight?: number;
   maxDpr?: number;
 }
 
@@ -32,12 +33,21 @@ export function computeFrame(i: FrameInput): Frame {
   const aspect = i.cssWidth / i.cssHeight;
   let deviceWidth = Math.round(i.cssWidth * dpr);
   let deviceHeight = Math.round(i.cssHeight * dpr);
+  // Cap both dimensions (aspect preserved) so portrait containers cannot blow the pixel budget.
   const maxW = i.maxDeviceWidth ?? 1920;
+  const maxH = i.maxDeviceHeight ?? 1080;
   if (deviceWidth > maxW) {
     deviceHeight = Math.round((deviceHeight * maxW) / deviceWidth);
     deviceWidth = maxW;
   }
-  const vh = Math.max(90, Math.min(deviceHeight, Math.round(i.virtualHeight)));
+  if (deviceHeight > maxH) {
+    deviceWidth = Math.round((deviceWidth * maxH) / deviceHeight);
+    deviceHeight = maxH;
+  }
+  deviceWidth = Math.max(1, deviceWidth);
+  deviceHeight = Math.max(1, deviceHeight);
+  // The device size always wins over the virtual-height floor.
+  const vh = Math.min(deviceHeight, Math.max(90, Math.round(i.virtualHeight)));
   const vw = Math.max(1, Math.min(deviceWidth, Math.round(vh * aspect)));
   return {
     aspect,

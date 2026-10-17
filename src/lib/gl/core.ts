@@ -63,6 +63,11 @@ export interface TargetOptions {
   /** RGBA16F when true (needs EXT_color_buffer_float), else RGBA8. */
   hdr: boolean;
   filter?: 'linear' | 'nearest';
+  /**
+   * For 8-bit targets that hold linear light: 'srgb' allocates SRGB8_ALPHA8 so
+   * the GPU encodes on write and decodes on read, spending the bits perceptually.
+   */
+  encoding?: 'linear' | 'srgb';
 }
 
 /** Creates a colour render target, or returns null if the driver refuses the format. */
@@ -71,6 +76,8 @@ export function createTarget(gl: WebGL2RenderingContext, width: number, height: 
   gl.bindTexture(gl.TEXTURE_2D, tex);
   if (opts.hdr) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  } else if (opts.encoding === 'srgb') {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.SRGB8_ALPHA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   } else {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   }

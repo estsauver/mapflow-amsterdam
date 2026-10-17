@@ -105,4 +105,14 @@ describe('applyLimits', () => {
     expect(capped.lighting).toBe(f.lighting);
     expect(applyLimits(f)).toEqual(f);
   });
+
+  it('is a minimum with the curve, not an assignment', () => {
+    const start = fidelityAt(0);
+    expect(applyLimits(start, { bloom: 0.5, lighting: 1 }).bloom).toBe(0);
+    expect(applyLimits(start, { bloom: 0.5, lighting: 1 }).lighting).toBe(0);
+    expect(applyLimits(start, { vignette: 0.2 }).vignette).toBe(0.2);
+    const final = fidelityFinal();
+    expect(applyLimits(final, { vignette: 0.9 }).vignette).toBe(final.vignette);
+    expect(final.bloom).toBeGreaterThan(0); // the input is not mutated by capping
+  });
 });

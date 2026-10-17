@@ -32,7 +32,9 @@ in vec2 vUv;
 out vec4 fragColor;
 ${COMMON}
 vec4 layerAt(sampler2D t, vec2 uv) {
-  uv = clamp(uv, vec2(0.0), vec2(1.0));
+  // Clamp to texel centres: the layer texture is device-sized and only the
+  // top-left vw×vh is drawn, so uv = 1.0 would land on the first undrawn texel.
+  uv = clamp(uv, vec2(0.5) / uVirtual, 1.0 - vec2(0.5) / uVirtual);
   return texture(t, vec2(uv.x, 1.0 - uv.y) * uTexScale);
 }
 float bayer4(vec2 p) {
@@ -68,8 +70,6 @@ uniform vec2 uVirtual;       // vw, vh
 uniform vec2 uOutput;        // device pixels
 uniform float uSmooth;       // 0 nearest .. 1 bicubic
 uniform float uBarrel;
-uniform float uScanlines;
-uniform float uMask;
 uniform float uVignette;
 uniform float uSaturation;
 uniform float uContrast;
@@ -123,12 +123,8 @@ void main() {
   col = mix(vec3(l), col, uSaturation);
   col = (col - 0.5) * uContrast + 0.5;
 
-  // CRT: scanlines follow virtual rows, the aperture grille follows device columns.
-  float row = uv.y * uVirtual.y;
-  float scan = mix(1.0, 0.55 + 0.45 * abs(sin(3.14159265 * row)), uScanlines);
-  int c = int(gl_FragCoord.x) % 3;
-  vec3 grille = c == 0 ? vec3(1.0, 0.62, 0.62) : (c == 1 ? vec3(0.62, 1.0, 0.62) : vec3(0.62, 0.62, 1.0));
-  col *= scan * mix(vec3(1.0), grille * 1.18, uMask);
+  // Scanlines and the aperture grille are applied per output pixel in the
+  // composite pass so they are never resampled through the tilt.
   col *= 1.0 - uVignette * smoothstep(0.35, 1.25, length(d) * 2.0);
   col *= inside;
   fragColor = vec4(toLinear(clamp(col, 0.0, 1.0)), 1.0);
@@ -177,6 +173,9 @@ uniform float uAberration;   // output pixels
 uniform float uGrain;
 uniform float uTime;
 uniform vec2 uOutput;
+uniform float uScanlines;
+uniform float uMask;
+uniform vec2 uVirtual;
 // Perspective tilt (see src/lib/console/tilt.ts for the same math in TS)
 uniform float uRx;
 uniform float uRy;
@@ -227,6 +226,13 @@ void main() {
   scene.r = texture(uScene, uv + ca).r;
   scene.g = texture(uScene, uv).g;
   scene.b = texture(uScene, uv - ca).b;
+  // CRT: scanlines follow the picture's virtual rows (through the tilt), the
+  // aperture grille follows real output columns. Bloom glows over the mask.
+  float row = uv.y * uVirtual.y;
+  float scan = mix(1.0, 0.55 + 0.45 * abs(sin(3.14159265 * row)), uScanlines);
+  int gc = int(gl_FragCoord.x) % 3;
+  vec3 grille = gc == 0 ? vec3(1.0, 0.62, 0.62) : (gc == 1 ? vec3(0.62, 1.0, 0.62) : vec3(0.62, 0.62, 1.0));
+  scene *= scan * mix(vec3(1.0), grille * 1.18, uMask);
   vec3 bloom = texture(uBloom, uv).rgb;
   vec3 col = scene + bloom * uBloomStrength;
   col = aces(col * 1.05);

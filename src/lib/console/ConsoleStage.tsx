@@ -83,18 +83,28 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
       pointer.y = (1 - p.v) * frame.logicalHeight;
       pointer.inside = p.u >= 0 && p.u <= 1 && p.v >= 0 && p.v <= 1;
     };
+    // Only the primary button of one pointer at a time counts as a game click.
+    let activePointer: number | null = null;
     const onMove = (e: PointerEvent) => updatePointer(e);
     const onDown = (e: PointerEvent) => {
+      if (e.button !== 0 || activePointer !== null) return;
+      activePointer = e.pointerId;
       updatePointer(e);
       pointer.down = true;
       pointer.justPressed = true;
       canvas.setPointerCapture?.(e.pointerId);
     };
-    const onUp = (e: PointerEvent) => {
-      updatePointer(e);
+    const release = (e: PointerEvent) => {
+      if (e.pointerId !== activePointer) return;
+      activePointer = null;
       pointer.down = false;
       pointer.justReleased = true;
     };
+    const onUp = (e: PointerEvent) => {
+      updatePointer(e);
+      release(e);
+    };
+    const onCancel = (e: PointerEvent) => release(e);
     const onLeave = () => {
       pointer.inside = false;
       pointerNorm.x = 0;
@@ -109,6 +119,8 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
     canvas.addEventListener('pointermove', onMove);
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointercancel', onCancel);
+    canvas.addEventListener('lostpointercapture', onCancel);
     canvas.addEventListener('pointerleave', onLeave);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -123,22 +135,34 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
     let eraCount = 0;
     let fps = 0, fpsFrames = 0, fpsStart = 0;
 
+    // Live window resizes change the container size every frame; keep rendering at the
+    // last adopted size and only reallocate once the new size has held for a moment.
+    const SIZE_SETTLE_MS = 120;
+    let adopted = { w: 0, h: 0, dpr: 0 };
+    let candidate = { w: 0, h: 0, dpr: 0, since: 0 };
+    const adoptSize = (now: number) => {
+      const w = container.clientWidth, h = container.clientHeight, dpr = window.devicePixelRatio;
+      if (w === adopted.w && h === adopted.h && dpr === adopted.dpr) return;
+      if (w !== candidate.w || h !== candidate.h || dpr !== candidate.dpr) candidate = { w, h, dpr, since: now };
+      if (adopted.w === 0 || now - candidate.since >= SIZE_SETTLE_MS) adopted = { w, h, dpr };
+    };
+
     /** Advances the game by dt seconds and renders one frame. Returns false once the stage has stopped. */
     const renderFrame = (dt: number): boolean => {
+      if (post.lost) return true;
       elapsed += dt;
       time += dt;
-
-      const fid = applyLimits(reducedMotion ? fidelityFinal() : fidelityAt(elapsed, duration), limits);
-      if (fid.era !== currentEra) {
-        currentEra = fid.era;
-        eraCount++;
-        if (showEraTag && !reducedMotion) setEra({ era: fid.era, n: eraCount });
-      }
-
-      const cssW = container.clientWidth, cssH = container.clientHeight;
-      if (cssW < 2 || cssH < 2) return true;
       try {
-        frame = computeFrame({ cssWidth: cssW, cssHeight: cssH, dpr: window.devicePixelRatio, virtualHeight: fid.virtualHeight });
+        const fid = applyLimits(reducedMotion ? fidelityFinal() : fidelityAt(elapsed, duration), limits);
+        if (fid.era !== currentEra) {
+          currentEra = fid.era;
+          eraCount++;
+          if (showEraTag && !reducedMotion) setEra({ era: fid.era, n: eraCount });
+        }
+
+        adoptSize(performance.now());
+        if (adopted.w < 2 || adopted.h < 2) return true;
+        frame = computeFrame({ cssWidth: adopted.w, cssHeight: adopted.h, dpr: adopted.dpr, virtualHeight: fid.virtualHeight });
         if (canvas.width !== frame.deviceWidth || canvas.height !== frame.deviceHeight) {
           canvas.width = frame.deviceWidth;
           canvas.height = frame.deviceHeight;
@@ -169,7 +193,8 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
         painter.beginFrame(frame, time, { bevel: fid.bevel });
         game.draw(painter);
         post.upload(layers, frame.vw, frame.vh);
-        post.render(frame, { fidelity: fid, pointer: pointerSmooth, time, tilt });
+        // Reduced motion also freezes the temporal grain and dither.
+        post.render(frame, { fidelity: fid, pointer: pointerSmooth, time: reducedMotion ? 0 : time, tilt });
       } catch (err) {
         console.error('ConsoleStage: frame failed, stopping', err);
         running = false;
@@ -210,6 +235,10 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
     };
     const onVisibility = () => (document.hidden ? stop() : start());
     document.addEventListener('visibilitychange', onVisibility);
+    post.onContextLost = stop;
+    post.onContextRestored = () => {
+      if (!document.hidden) start();
+    };
     start();
 
     if (import.meta.env.DEV) {
@@ -245,6 +274,8 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointerup', onUp);
+      canvas.removeEventListener('pointercancel', onCancel);
+      canvas.removeEventListener('lostpointercapture', onCancel);
       canvas.removeEventListener('pointerleave', onLeave);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);

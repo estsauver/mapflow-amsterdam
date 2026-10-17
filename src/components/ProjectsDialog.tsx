@@ -89,6 +89,15 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
 
   const [currentProjectIndex, setCurrentProjectIndex] = useState(getInitialIndex);
   const currentProject = PROJECTS[currentProjectIndex];
+  // The game stage is heavy to mount (a WebGL2 context and its targets), so a burst
+  // of navigation only mounts the project the user settles on.
+  const [settledIndex, setSettledIndex] = useState(getInitialIndex);
+  useEffect(() => {
+    if (settledIndex === currentProjectIndex) return;
+    const id = window.setTimeout(() => setSettledIndex(currentProjectIndex), 200);
+    return () => window.clearTimeout(id);
+  }, [currentProjectIndex, settledIndex]);
+  const stageProject = PROJECTS[settledIndex];
   const isMobile = useIsMobile();
 
   // Sync state with URL when projectId changes
@@ -138,6 +147,10 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) {
+        if (e.key.startsWith('Arrow')) e.preventDefault();
+        return;
+      }
       if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         e.preventDefault();
         goToPrevProject();
@@ -160,7 +173,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     if (devParams?.get('console') === 'test') {
       return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} />;
     }
-    switch (currentProject.id) {
+    switch (stageProject.id) {
       // Each game runs on the console stage, which renders it through the fidelity
       // ramp. The key restarts the ramp when the project changes. Caps keep the
       // text-heavy games legible and the light-themed storybook from blooming out.
@@ -181,7 +194,7 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
         return (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
             <div className="text-center space-y-4 px-6">
-              {currentProject.hasGame ? (
+              {stageProject.hasGame ? (
                 <>
                   <div className="text-6xl">🚧</div>
                   <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
@@ -191,21 +204,21 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
               ) : (
                 <>
                   <h2 className="text-3xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
-                    {currentProject.name}
+                    {stageProject.name}
                   </h2>
-                  {currentProject.role && (
+                  {stageProject.role && (
                     <p className="text-sm text-slate-500" style={{ fontFamily: 'monospace' }}>
-                      {currentProject.role}
+                      {stageProject.role}
                     </p>
                   )}
                 </>
               )}
               <p className="text-slate-400 max-w-md mx-auto" style={{ fontFamily: 'monospace' }}>
-                {currentProject.description}
+                {stageProject.description}
               </p>
-              {currentProject.link && (
+              {stageProject.link && (
                 <a
-                  href={currentProject.link}
+                  href={stageProject.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"

@@ -172,10 +172,14 @@ export class CanvasPainter implements Painter {
     const ctx = this.ctx;
     const artScale = opts.scale ?? 4;
     const pv = spritePixelSize(this.scale, artScale);
-    const vx = Math.round(x * this.scale);
-    const vy = Math.round(y * this.scale);
     const bevel = this.style.bevel;
     const cols = Math.max(...sprite.rows.map(r => r.length));
+    // Centre the snapped footprint on the intended one so the sprite does not
+    // creep right/down as the ramp changes the virtual resolution.
+    const dx = (cols * artScale * this.scale - cols * pv) / 2;
+    const dy = (sprite.rows.length * artScale * this.scale - sprite.rows.length * pv) / 2;
+    const vx = Math.round(x * this.scale + dx);
+    const vy = Math.round(y * this.scale + dy);
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (opts.alpha !== undefined) ctx.globalAlpha *= opts.alpha;
@@ -201,13 +205,16 @@ export class CanvasPainter implements Painter {
         } else {
           // Bevelled tile: rounded square with a light top-left and dark bottom-right edge.
           const inset = Math.max(0, Math.min(1, pv * 0.08 * bevel));
+          ctx.save();
           ctx.beginPath();
           ctx.roundRect(px + inset, py + inset, pv - inset * 2, pv - inset * 2, pv * 0.22 * bevel);
-          ctx.fill();
+          ctx.clip();
+          ctx.fillRect(px, py, pv, pv);
           ctx.fillStyle = `rgba(255,255,255,${0.28 * bevel})`;
           ctx.fillRect(px + inset, py + inset, pv - inset * 2, Math.max(1, pv * 0.18));
           ctx.fillStyle = `rgba(0,0,0,${0.3 * bevel})`;
           ctx.fillRect(px + inset, py + pv - inset - Math.max(1, pv * 0.18), pv - inset * 2, Math.max(1, pv * 0.18));
+          ctx.restore();
         }
         c += run;
       }

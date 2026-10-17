@@ -21,8 +21,8 @@ export interface PostInput {
  */
 export class RetroPostProcessor {
   readonly gl: WebGL2RenderingContext;
-  private programs: { compose: Program; upscale: Program; lighting: Program; composite: Program };
-  private readonly bloom: BloomPass;
+  private programs!: { compose: Program; upscale: Program; lighting: Program; composite: Program };
+  private bloom!: BloomPass;
   private hdr: boolean;
   private layerTex: WebGLTexture[] = [];
   private compose: Target | null = null;
@@ -34,6 +34,28 @@ export class RetroPostProcessor {
   private pendingQueries: WebGLQuery[] = [];
   private lastGpuMs = 0;
   private disposed = false;
+  /** True between webglcontextlost and webglcontextrestored; render() and upload() no-op meanwhile. */
+  lost = false;
+  onContextLost?: () => void;
+  onContextRestored?: () => void;
+
+  private readonly handleContextLost = (e: Event) => {
+    e.preventDefault();
+    this.lost = true;
+    this.pendingQueries = [];
+    this.onContextLost?.();
+  };
+  private readonly handleContextRestored = () => {
+    // Every GL object died with the context: rebuild programs and force reallocation.
+    this.timerExt = this.gl.getExtension('EXT_disjoint_timer_query_webgl2');
+    this.hdr = supportsHdrTargets(this.gl);
+    this.initPrograms();
+    this.layerTex = [];
+    this.compose = this.scene = this.lit = null;
+    this.deviceWidth = this.deviceHeight = 0;
+    this.lost = false;
+    this.onContextRestored?.();
+  };
 
   constructor(readonly canvas: HTMLCanvasElement) {
     const gl = canvas.getContext('webgl2', {
@@ -52,11 +74,18 @@ export class RetroPostProcessor {
     this.gl = gl;
     this.hdr = supportsHdrTargets(gl);
     this.timerExt = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+    this.initPrograms();
+    canvas.addEventListener('webglcontextlost', this.handleContextLost);
+    canvas.addEventListener('webglcontextrestored', this.handleContextRestored);
+  }
+
+  private initPrograms(): void {
+    const gl = this.gl;
     this.programs = {
       compose: createProgram(gl, COMPOSE_FRAG, ['uLayer0', 'uLayer1', 'uLayer2', 'uTexScale', 'uVirtual', 'uParallax', 'uPointer', 'uLevels', 'uDither']),
-      upscale: createProgram(gl, UPSCALE_FRAG, ['uScene', 'uSceneScale', 'uVirtual', 'uOutput', 'uSmooth', 'uBarrel', 'uScanlines', 'uMask', 'uVignette', 'uSaturation', 'uContrast']),
+      upscale: createProgram(gl, UPSCALE_FRAG, ['uScene', 'uSceneScale', 'uVirtual', 'uOutput', 'uSmooth', 'uBarrel', 'uVignette', 'uSaturation', 'uContrast']),
       lighting: createProgram(gl, LIGHTING_FRAG, ['uScene', 'uTexel', 'uLight', 'uAspect', 'uStrength']),
-      composite: createProgram(gl, COMPOSITE_FRAG, ['uScene', 'uBloom', 'uBloomStrength', 'uAberration', 'uGrain', 'uTime', 'uOutput', 'uRx', 'uRy', 'uAspect', 'uDist', 'uShrink', 'uBackground']),
+      composite: createProgram(gl, COMPOSITE_FRAG, ['uScene', 'uBloom', 'uBloomStrength', 'uAberration', 'uGrain', 'uTime', 'uOutput', 'uScanlines', 'uMask', 'uVirtual', 'uRx', 'uRy', 'uAspect', 'uDist', 'uShrink', 'uBackground']),
     };
     this.bloom = new BloomPass(gl, 4);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
@@ -71,7 +100,7 @@ export class RetroPostProcessor {
 
   /** (Re)allocates textures and targets when the device size changes. */
   resize(frame: Frame): void {
-    if (this.disposed) return;
+    if (this.disposed || this.lost) return;
     if (frame.deviceWidth === this.deviceWidth && frame.deviceHeight === this.deviceHeight && this.layerTex.length) return;
     const gl = this.gl;
     this.release();
@@ -88,15 +117,15 @@ export class RetroPostProcessor {
       this.layerTex.push(tex);
     }
     this.compose = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: false, filter: 'linear' });
-    let scene = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: this.hdr });
-    let lit = scene && createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: this.hdr });
+    let scene = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: this.hdr, encoding: 'srgb' });
+    let lit = scene && createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: this.hdr, encoding: 'srgb' });
     if ((!scene || !lit) && this.hdr) {
-      // Driver advertised float colour buffers but refused one; use 8-bit targets instead.
+      // Driver advertised float colour buffers but refused one; use sRGB-encoded 8-bit targets instead.
       deleteTarget(gl, scene);
       deleteTarget(gl, lit);
       this.hdr = false;
-      scene = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: false });
-      lit = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: false });
+      scene = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: false, encoding: 'srgb' });
+      lit = createTarget(gl, frame.deviceWidth, frame.deviceHeight, { hdr: false, encoding: 'srgb' });
     }
     if (!this.compose || !scene || !lit) throw new Error('Could not allocate the console framebuffers');
     this.scene = scene;
@@ -106,6 +135,7 @@ export class RetroPostProcessor {
 
   /** Copies the drawn vw×vh region of each layer canvas into its texture. */
   upload(layers: readonly HTMLCanvasElement[], vw: number, vh: number): void {
+    if (this.lost || !this.layerTex.length) return;
     const gl = this.gl;
     for (let i = 0; i < 3; i++) {
       gl.bindTexture(gl.TEXTURE_2D, this.layerTex[i]);
@@ -114,7 +144,7 @@ export class RetroPostProcessor {
   }
 
   render(frame: Frame, input: PostInput): void {
-    if (this.disposed || !this.compose || !this.scene || !this.lit) return;
+    if (this.disposed || this.lost || !this.compose || !this.scene || !this.lit) return;
     const gl = this.gl;
     const f = input.fidelity;
     const P = this.programs;
@@ -155,8 +185,6 @@ export class RetroPostProcessor {
     gl.uniform2f(P.upscale.uniforms.uOutput, this.deviceWidth, this.deviceHeight);
     gl.uniform1f(P.upscale.uniforms.uSmooth, f.smooth);
     gl.uniform1f(P.upscale.uniforms.uBarrel, f.barrel);
-    gl.uniform1f(P.upscale.uniforms.uScanlines, f.scanlines);
-    gl.uniform1f(P.upscale.uniforms.uMask, f.mask);
     gl.uniform1f(P.upscale.uniforms.uVignette, f.vignette);
     gl.uniform1f(P.upscale.uniforms.uSaturation, f.saturation);
     gl.uniform1f(P.upscale.uniforms.uContrast, f.contrast);
@@ -195,6 +223,9 @@ export class RetroPostProcessor {
     gl.uniform1f(P.composite.uniforms.uGrain, f.grain);
     gl.uniform1f(P.composite.uniforms.uTime, input.time);
     gl.uniform2f(P.composite.uniforms.uOutput, this.canvas.width, this.canvas.height);
+    gl.uniform1f(P.composite.uniforms.uScanlines, f.scanlines);
+    gl.uniform1f(P.composite.uniforms.uMask, f.mask);
+    gl.uniform2f(P.composite.uniforms.uVirtual, frame.vw, frame.vh);
     gl.uniform1f(P.composite.uniforms.uRx, input.tilt.rx);
     gl.uniform1f(P.composite.uniforms.uRy, input.tilt.ry);
     gl.uniform1f(P.composite.uniforms.uAspect, input.tilt.aspect);
@@ -240,6 +271,8 @@ export class RetroPostProcessor {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
+    this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
     const gl = this.gl;
     this.release();
     for (const q of this.pendingQueries) gl.deleteQuery(q);

@@ -20,6 +20,22 @@ describe('computeFrame', () => {
     expect(f.vw).toBe(1920);
   });
 
+  it('caps portrait containers by height, preserving the aspect ratio', () => {
+    const f = computeFrame({ cssWidth: 1026, cssHeight: 1728, dpr: 2, virtualHeight: 1080 });
+    expect(f.deviceHeight).toBe(1080);
+    expect(f.deviceWidth * f.deviceHeight).toBeLessThanOrEqual(1920 * 1080);
+    expect(f.deviceWidth / f.deviceHeight).toBeCloseTo(1026 / 1728, 2);
+    expect(f.vw).toBeLessThanOrEqual(f.deviceWidth);
+  });
+
+  it('never renders more virtual lines than the device has', () => {
+    const f = computeFrame({ cssWidth: 300, cssHeight: 60, dpr: 1, virtualHeight: 216 });
+    expect(f.vh).toBeLessThanOrEqual(f.deviceHeight);
+    expect(f.vw).toBeLessThanOrEqual(f.deviceWidth);
+    const g = computeFrame({ cssWidth: 300, cssHeight: 4, dpr: 1, virtualHeight: 216 });
+    expect(g.vh).toBeLessThanOrEqual(g.deviceHeight);
+  });
+
   it('refuses degenerate sizes', () => {
     expect(() => computeFrame({ cssWidth: 0, cssHeight: 900, dpr: 1, virtualHeight: 216 })).toThrow();
     expect(() => computeFrame({ cssWidth: 900, cssHeight: 900, dpr: 1, virtualHeight: 0 })).toThrow();
