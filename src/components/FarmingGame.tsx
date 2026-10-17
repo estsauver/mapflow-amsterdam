@@ -530,7 +530,7 @@ const FarmingGame: React.FC = () => {
       {/* Auto-play toggle */}
       <button
         onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
-        className="absolute top-4 right-4 bg-slate-800/90 border-2 border-slate-600 rounded px-3 py-1 text-xs text-white hover:bg-slate-700 transition-colors z-30"
+        className="absolute bottom-4 right-4 bg-slate-800/90 border-2 border-slate-600 rounded px-3 py-1 text-xs text-white hover:bg-slate-700 transition-colors z-30"
         style={{ fontFamily: 'monospace' }}
       >
         {isAutoPlaying ? '⏸ PAUSE' : '▶ AUTO'}

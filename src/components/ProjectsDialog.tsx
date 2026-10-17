@@ -10,6 +10,8 @@ import EstimatorGame from './EstimatorGame';
 import SqlGame from './SqlGame';
 import SpotlightGame from './SpotlightGame';
 import StorybookGame from './StorybookGame';
+import BlackHoleScene from './BlackHoleScene';
+import FidelityRamp from './FidelityRamp';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -32,6 +34,14 @@ const PROJECTS: Project[] = [
     role: 'Founder, CTO (2015-2023)',
     description: 'Providing smallholder farmers in Africa with access to credit, high-quality seeds, fertilizer, and data-driven agronomic advice.',
     hasGame: true,
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic',
+    role: 'MTS (2026-present)',
+    description: "I can't say much about what I'm working on here.",
+    hasGame: true,
+    link: 'https://www.anthropic.com',
   },
   {
     id: 'universal-estimator',
@@ -140,28 +150,50 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, goToPrevProject, goToNextProject]);
 
+  // Development aid: /projects/<id>?t=12 starts the fidelity ramp 12 s in.
+  const fidelityStartAt = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('t')) || 0 : 0;
+
   const renderProjectGame = () => {
     switch (currentProject.id) {
+      // Each game is wrapped in a FidelityRamp that evolves its presentation from
+      // retro to modern. The key restarts the ramp when the project changes.
       case 'apollo':
-        return <FarmingGame />;
+        return <FidelityRamp startAt={fidelityStartAt} key="apollo" limits={{ scanlines: 0.25 }}><FarmingGame /></FidelityRamp>;
+      case 'anthropic':
+        return <BlackHoleScene />;
       case 'universal-estimator':
-        return <EstimatorGame />;
+        return <FidelityRamp startAt={fidelityStartAt} key="universal-estimator" limits={{ scanlines: 0.25, lighting: 0.5, aberration: 0.15 }}><EstimatorGame /></FidelityRamp>;
       case 'nosql':
-        return <SqlGame />;
+        return <FidelityRamp startAt={fidelityStartAt} key="nosql" limits={{ scanlines: 0.3, bloom: 0.45, lighting: 0.5, aberration: 0.15 }}><SqlGame /></FidelityRamp>;
       case 'dspy':
-        return <SpotlightGame />;
+        return <FidelityRamp startAt={fidelityStartAt} key="dspy" limits={{ vignette: 0.25, lighting: 0.45, aberration: 0.12 }}><SpotlightGame /></FidelityRamp>;
       case 'childrens':
-        return <StorybookGame />;
+        return <FidelityRamp startAt={fidelityStartAt} key="childrens" limits={{ bloom: 0.25, vignette: 0.2, lighting: 0.5, scanlines: 0.35 }}><StorybookGame /></FidelityRamp>;
       default:
-        // Coming soon placeholder for other projects
+        // Entries with hasGame but no game yet get a placeholder; entries without a game get a plain info panel.
         return (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">🚧</div>
-              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
-                GAME COMING SOON
-              </h2>
-              <p className="text-slate-400 max-w-md" style={{ fontFamily: 'monospace' }}>
+            <div className="text-center space-y-4 px-6">
+              {currentProject.hasGame ? (
+                <>
+                  <div className="text-6xl">🚧</div>
+                  <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
+                    GAME COMING SOON
+                  </h2>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-3xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
+                    {currentProject.name}
+                  </h2>
+                  {currentProject.role && (
+                    <p className="text-sm text-slate-500" style={{ fontFamily: 'monospace' }}>
+                      {currentProject.role}
+                    </p>
+                  )}
+                </>
+              )}
+              <p className="text-slate-400 max-w-md mx-auto" style={{ fontFamily: 'monospace' }}>
                 {currentProject.description}
               </p>
               {currentProject.link && (
