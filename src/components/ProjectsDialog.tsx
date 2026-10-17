@@ -166,29 +166,31 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
 
   // Development aids: /projects/<id>?t=12 starts the fidelity ramp 12 s in;
   // /projects/<id>?console=test shows the console test pattern instead of the game.
+  // /projects/<id>?gl=off exercises the no-WebGL fallbacks.
   const devParams = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
   const fidelityStartAt = Number(devParams?.get('t')) || 0;
+  const forceFallback = devParams?.get('gl') === 'off';
 
   const renderProjectGame = () => {
     if (devParams?.get('console') === 'test') {
-      return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} />;
+      return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} forceFallback={forceFallback} />;
     }
     switch (stageProject.id) {
       // Each game runs on the console stage, which renders it through the fidelity
       // ramp. The key restarts the ramp when the project changes. Caps keep the
       // text-heavy games legible and the light-themed storybook from blooming out.
       case 'apollo':
-        return <ConsoleStage key="apollo" program={createFarmingGame} startAt={fidelityStartAt} />;
+        return <ConsoleStage key="apollo" program={createFarmingGame} startAt={fidelityStartAt} forceFallback={forceFallback} />;
       case 'anthropic':
-        return <BlackHoleScene />;
+        return <BlackHoleScene forceFallback={forceFallback} />;
       case 'universal-estimator':
-        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} limits={{ lighting: 0.5, aberration: 0.15 }} />;
+        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15 }} />;
       case 'nosql':
-        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} limits={{ lighting: 0.5, aberration: 0.15 }} />;
+        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15 }} />;
       case 'dspy':
-        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} limits={{ lighting: 0.45, aberration: 0.12 }} />;
+        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.45, aberration: 0.12 }} />;
       case 'childrens':
-        return <ConsoleStage key="childrens" program={createStorybookGame} startAt={fidelityStartAt} limits={{ bloom: 0.2, vignette: 0.2, lighting: 0.5 }} />;
+        return <ConsoleStage key="childrens" program={createStorybookGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ bloom: 0.2, vignette: 0.2, lighting: 0.5 }} />;
       default:
         // Entries with hasGame but no game yet get a placeholder; entries without a game get a plain info panel.
         return (

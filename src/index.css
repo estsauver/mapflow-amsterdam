@@ -260,3 +260,16 @@
 @media (prefers-reduced-motion: reduce) {
   .console-era-tag { animation: none; opacity: 0; }
 }
+
+/* Slow drift for the pre-rendered black hole still shown without WebGL2. */
+@keyframes blackhole-drift {
+  0% { transform: scale(1.02) translate(0, 0); }
+  100% { transform: scale(1.08) translate(-1.2%, 0.6%); }
+}
+.blackhole-still {
+  animation: blackhole-drift 45s ease-in-out infinite alternate;
+  transform-origin: 55% 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blackhole-still { animation: none; }
+}

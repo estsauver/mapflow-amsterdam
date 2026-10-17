@@ -1,17 +1,10 @@
-import type { FidelityParams } from '@/lib/fidelity';
 import { BloomPass } from '@/lib/gl/BloomPass';
 import { Program, Target, bindTarget, createProgram, createTarget, deleteTarget, drawFullscreen, supportsHdrTargets } from '@/lib/gl/core';
 import type { Frame } from '../layout';
-import type { TiltConfig } from '../tilt';
+import type { PostInput, PostProcessor } from './PostProcessor';
 import { COMPOSE_FRAG, COMPOSITE_FRAG, LIGHTING_FRAG, UPSCALE_FRAG } from './shaders';
 
-export interface PostInput {
-  fidelity: FidelityParams;
-  /** Smoothed pointer, -1..1, y down. */
-  pointer: { x: number; y: number };
-  time: number;
-  tilt: TiltConfig;
-}
+export type { PostInput } from './PostProcessor';
 
 /**
  * GPU post pipeline for the console. Takes the three layer canvases, composes
@@ -19,7 +12,8 @@ export interface PostInput {
  * resolution with CRT treatment, blooms, relights, and composites onto a
  * perspective-tilted plane.
  */
-export class RetroPostProcessor {
+export class RetroPostProcessor implements PostProcessor {
+  readonly kind = 'webgl2' as const;
   readonly gl: WebGL2RenderingContext;
   private programs!: { compose: Program; upscale: Program; lighting: Program; composite: Program };
   private bloom!: BloomPass;

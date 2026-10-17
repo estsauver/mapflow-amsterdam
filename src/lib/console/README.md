@@ -6,7 +6,11 @@ paints the frame. Games never touch the DOM, timers, `Date`, or `Math.random`
 (use `seededRandom` from `random.ts`). The stage calls `update` then `draw`
 once per animation frame and renders the result at an era-dependent
 resolution with GPU post-processing (pixelation, palette, CRT, bloom,
-lighting, parallax, tilt). Games do not implement any of those effects.
+lighting, parallax, tilt). Games do not implement any of those effects. Without WebGL2 the stage falls
+back to a Canvas 2D pipeline (`post/Canvas2DPostProcessor.ts`) that keeps
+pixelation, palette and dither at console resolutions, scanlines, grille,
+vignette, a cheap bloom and grain, and drops the tilt, parallax lighting and
+aberration; games are unaffected.
 
 ## Coordinates and layout
 

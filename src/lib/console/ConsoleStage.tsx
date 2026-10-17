@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FIDELITY_DURATION, FidelityEra, FidelityLimitKey, applyLimits, fidelityAt, fidelityFinal } from '@/lib/fidelity';
 import { CanvasPainter } from './CanvasPainter';
 import { Frame, computeFrame } from './layout';
+import { Canvas2DPostProcessor } from './post/Canvas2DPostProcessor';
+import type { PostProcessor } from './post/PostProcessor';
 import { RetroPostProcessor } from './post/RetroPostProcessor';
 import { TiltConfig, planeFromScreen } from './tilt';
 import type { GameFactory, Input, PointerState } from './types';
@@ -13,7 +15,11 @@ interface ConsoleStageProps {
   duration?: number;
   limits?: Partial<Record<FidelityLimitKey, number>>;
   showEraTag?: boolean;
+  /** Skip WebGL2 and use the Canvas 2D fallback (for QA). */
+  forceFallback?: boolean;
 }
+
+type StageMode = 'webgl2' | 'canvas2d' | 'none';
 
 const ERA_LABEL: Record<FidelityEra, string> = {
   'eight-bit': '8-BIT ERA',
@@ -29,30 +35,42 @@ const PERSPECTIVE_DIST = 3.2; // in half-heights of the plane
  * ramp's virtual resolution and renders the result through the GPU post
  * pipeline. Pointer input is mapped back through the perspective tilt.
  *
- * Without WebGL2 the games cannot be rendered at all, so a short notice is
- * shown instead (the same disclosed behaviour as the black hole scene).
+ * Without WebGL2 (or if the GPU path fails at runtime) the stage switches to
+ * the Canvas 2D fallback pipeline, which keeps the games playable with a
+ * reduced effect set. Only when even a 2D canvas is unavailable is a notice shown.
  */
-const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limits, showEraTag = true }: ConsoleStageProps) => {
+const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limits, showEraTag = true, forceFallback = false }: ConsoleStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [supported, setSupported] = useState<boolean | null>(null);
+  const glCanvasRef = useRef<HTMLCanvasElement>(null);
+  const softCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [mode, setMode] = useState<StageMode | null>(null);
   const [era, setEra] = useState<{ era: FidelityEra; n: number } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
+    const glCanvas = glCanvasRef.current;
+    const softCanvas = softCanvasRef.current;
+    if (!container || !glCanvas || !softCanvas) return;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let post: RetroPostProcessor;
+    let post: PostProcessor;
+    let canvas: HTMLCanvasElement;
     try {
-      post = new RetroPostProcessor(canvas);
-    } catch (err) {
-      console.error('ConsoleStage: WebGL2 pipeline failed to start', err);
-      setSupported(false);
-      return;
+      if (forceFallback) throw new Error('fallback forced');
+      post = new RetroPostProcessor(glCanvas);
+      canvas = glCanvas;
+    } catch (glErr) {
+      try {
+        post = new Canvas2DPostProcessor(softCanvas);
+        canvas = softCanvas;
+        if (import.meta.env.DEV) console.info('ConsoleStage: using the Canvas 2D fallback pipeline', glErr);
+      } catch (softErr) {
+        console.error('ConsoleStage: no rendering path available', glErr, softErr);
+        setMode('none');
+        return;
+      }
     }
-    setSupported(true);
+    setMode(post.kind);
 
     const layers = [0, 1, 2].map(() => document.createElement('canvas'));
     const painter = new CanvasPainter(layers);
@@ -68,7 +86,7 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
     let frame: Frame | null = null;
 
     const updatePointer = (e: PointerEvent) => {
-      const b = canvas.getBoundingClientRect();
+      const b = container.getBoundingClientRect();
       if (b.width < 1 || b.height < 1) return;
       const sx = ((e.clientX - b.left) / b.width) * 2 - 1;
       const syUp = 1 - ((e.clientY - b.top) / b.height) * 2;
@@ -92,7 +110,7 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
       updatePointer(e);
       pointer.down = true;
       pointer.justPressed = true;
-      canvas.setPointerCapture?.(e.pointerId);
+      container.setPointerCapture?.(e.pointerId);
     };
     const release = (e: PointerEvent) => {
       if (e.pointerId !== activePointer) return;
@@ -116,12 +134,12 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
       keysJustPressed.add(e.key);
     };
     const onKeyUp = (e: KeyboardEvent) => keysDown.delete(e.key);
-    canvas.addEventListener('pointermove', onMove);
-    canvas.addEventListener('pointerdown', onDown);
-    canvas.addEventListener('pointerup', onUp);
-    canvas.addEventListener('pointercancel', onCancel);
-    canvas.addEventListener('lostpointercapture', onCancel);
-    canvas.addEventListener('pointerleave', onLeave);
+    container.addEventListener('pointermove', onMove);
+    container.addEventListener('pointerdown', onDown);
+    container.addEventListener('pointerup', onUp);
+    container.addEventListener('pointercancel', onCancel);
+    container.addEventListener('lostpointercapture', onCancel);
+    container.addEventListener('pointerleave', onLeave);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -172,15 +190,17 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
         const k = reducedMotion ? 1 : 0.08;
         pointerSmooth.x += (pointerNorm.x - pointerSmooth.x) * k;
         pointerSmooth.y += (pointerNorm.y - pointerSmooth.y) * k;
+        // The software pipeline cannot tilt the plane, so its pointer mapping is the identity.
+        const tiltDeg = post.kind === 'webgl2' ? fid.tilt : 0;
         const parallaxTilt = reducedMotion ? 0 : 0.6;
-        const rxDeg = fid.tilt * 0.45 - pointerSmooth.y * fid.tilt * parallaxTilt;
-        const ryDeg = pointerSmooth.x * fid.tilt * parallaxTilt;
+        const rxDeg = tiltDeg * 0.45 - pointerSmooth.y * tiltDeg * parallaxTilt;
+        const ryDeg = pointerSmooth.x * tiltDeg * parallaxTilt;
         tilt = {
           rx: (rxDeg * Math.PI) / 180,
           ry: (ryDeg * Math.PI) / 180,
           aspect: frame.aspect,
           dist: PERSPECTIVE_DIST,
-          shrink: 1 - 0.008 * fid.tilt,
+          shrink: 1 - 0.008 * tiltDeg,
         };
 
         const input: Input = {
@@ -196,9 +216,23 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
         // Reduced motion also freezes the temporal grain and dither.
         post.render(frame, { fidelity: fid, pointer: pointerSmooth, time: reducedMotion ? 0 : time, tilt });
       } catch (err) {
-        console.error('ConsoleStage: frame failed, stopping', err);
+        if (post.kind === 'webgl2') {
+          // The GPU path failed mid-session: hand over to the software pipeline.
+          console.error('ConsoleStage: WebGL2 frame failed, switching to the Canvas 2D fallback', err);
+          try {
+            post.dispose();
+            post = new Canvas2DPostProcessor(softCanvas);
+            canvas = softCanvas;
+            setMode('canvas2d');
+            return true;
+          } catch (softErr) {
+            console.error('ConsoleStage: fallback pipeline failed too', softErr);
+          }
+        } else {
+          console.error('ConsoleStage: frame failed, stopping', err);
+        }
         running = false;
-        setSupported(false);
+        setMode('none');
         return false;
       } finally {
         pointer.justPressed = false;
@@ -242,9 +276,9 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
     start();
 
     if (import.meta.env.DEV) {
-      (canvas as HTMLCanvasElement & { __console?: unknown }).__console = {
+      const hook = {
         get stats() {
-          return { fps: Math.round(fps), elapsed: +elapsed.toFixed(2), frame, post: post.stats, fidelity: applyLimits(fidelityAt(elapsed, duration), limits) };
+          return { mode: post.kind, fps: Math.round(fps), elapsed: +elapsed.toFixed(2), frame, post: post.stats, fidelity: applyLimits(fidelityAt(elapsed, duration), limits) };
         },
         /** Renders synchronously (QA in environments where requestAnimationFrame is paused). */
         step: (dt = 1 / 60, frames = 1) => {
@@ -265,18 +299,20 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
           pointer.down = false;
         },
       };
+      (glCanvas as HTMLCanvasElement & { __console?: unknown }).__console = hook;
+      (softCanvas as HTMLCanvasElement & { __console?: unknown }).__console = hook;
     }
 
     return () => {
       running = false;
       stop();
       document.removeEventListener('visibilitychange', onVisibility);
-      canvas.removeEventListener('pointermove', onMove);
-      canvas.removeEventListener('pointerdown', onDown);
-      canvas.removeEventListener('pointerup', onUp);
-      canvas.removeEventListener('pointercancel', onCancel);
-      canvas.removeEventListener('lostpointercapture', onCancel);
-      canvas.removeEventListener('pointerleave', onLeave);
+      container.removeEventListener('pointermove', onMove);
+      container.removeEventListener('pointerdown', onDown);
+      container.removeEventListener('pointerup', onUp);
+      container.removeEventListener('pointercancel', onCancel);
+      container.removeEventListener('lostpointercapture', onCancel);
+      container.removeEventListener('pointerleave', onLeave);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       game.dispose?.();
@@ -289,15 +325,21 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden select-none">
       <canvas
-        ref={canvasRef}
+        ref={glCanvasRef}
         className="absolute inset-0 w-full h-full touch-none"
-        aria-hidden={supported === false}
-        hidden={supported === false}
+        aria-hidden={mode !== 'webgl2'}
+        hidden={mode !== null && mode !== 'webgl2'}
       />
-      {supported === false && (
+      <canvas
+        ref={softCanvasRef}
+        className="absolute inset-0 w-full h-full touch-none"
+        aria-hidden={mode !== 'canvas2d'}
+        hidden={mode !== 'canvas2d'}
+      />
+      {mode === 'none' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <p className="text-sm text-slate-500 px-6 text-center" style={{ fontFamily: 'monospace' }}>
-            This browser cannot draw WebGL2, so the game console stays off.
+            This browser cannot draw to a canvas, so the game console stays off.
           </p>
         </div>
       )}

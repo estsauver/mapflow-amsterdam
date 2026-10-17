@@ -4,17 +4,22 @@ import { BlackHoleRenderer } from '@/lib/blackhole/BlackHoleRenderer';
 interface BlackHoleSceneProps {
   title?: string;
   subtitle?: string;
+  /** Skip WebGL2 and show the pre-rendered still (for QA). */
+  forceFallback?: boolean;
 }
+
+/** A frame of the real renderer, captured at 1600×946, shown when WebGL2 is unavailable. */
+const STILL_SRC = '/anthropic-blackhole.jpg';
 
 /**
  * The Anthropic "project": a ray-traced Schwarzschild black hole with a
  * relativistic accretion disk. All rendering lives in BlackHoleRenderer; this
  * component wires it to the DOM (size, pointer, visibility, lifecycle).
  *
- * If WebGL2 is unavailable the scene cannot be drawn at all, so the component
- * shows the same text panel the dialog uses for entries without a game.
+ * Without WebGL2 the scene cannot be ray-marched, so a pre-rendered still of
+ * the same scene is shown with a slow drift instead.
  */
-const BlackHoleScene = ({ title = 'ANTHROPIC', subtitle = 'MTS · 2026 →' }: BlackHoleSceneProps) => {
+const BlackHoleScene = ({ title = 'ANTHROPIC', subtitle = 'MTS · 2026 →', forceFallback = false }: BlackHoleSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -23,7 +28,8 @@ const BlackHoleScene = ({ title = 'ANTHROPIC', subtitle = 'MTS · 2026 →' }: B
     const container = containerRef.current;
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
-    if (!BlackHoleRenderer.isSupported()) {
+    if (forceFallback || !BlackHoleRenderer.isSupported()) {
+      if (import.meta.env.DEV) console.info('BlackHoleScene: WebGL2 unavailable, showing the pre-rendered still');
       setSupported(false);
       return;
     }
@@ -87,6 +93,8 @@ const BlackHoleScene = ({ title = 'ANTHROPIC', subtitle = 'MTS · 2026 →' }: B
       document.removeEventListener('visibilitychange', onVisibility);
       renderer.dispose();
     };
+    // The scene is bound to its mount; a later change of forceFallback does not restart it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -100,23 +108,20 @@ const BlackHoleScene = ({ title = 'ANTHROPIC', subtitle = 'MTS · 2026 →' }: B
         hidden={supported === false}
       />
       {supported === false && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center space-y-3 px-6" style={{ fontFamily: 'monospace' }}>
-            <h2 className="text-3xl font-bold text-white">{title}</h2>
-            <p className="text-sm text-slate-500">{subtitle}</p>
-            <p className="text-xs text-slate-600">This browser cannot draw WebGL2, so the black hole stays off.</p>
-          </div>
-        </div>
+        <img
+          src={STILL_SRC}
+          alt="A black hole with a glowing, lensed accretion disk against a star field"
+          decoding="async"
+          className="blackhole-still absolute inset-0 w-full h-full object-cover"
+        />
       )}
-      {supported !== false && (
-        <div
-          className="pointer-events-none absolute left-6 bottom-6"
-          style={{ fontFamily: 'monospace', textShadow: '0 0 18px rgba(0,0,0,0.9)' }}
-        >
-          <div className="text-white/90 text-xl tracking-[0.35em]">{title}</div>
-          <div className="text-slate-400 text-[11px] tracking-[0.3em] mt-1">{subtitle}</div>
-        </div>
-      )}
+      <div
+        className="pointer-events-none absolute left-6 bottom-6"
+        style={{ fontFamily: 'monospace', textShadow: '0 0 18px rgba(0,0,0,0.9)' }}
+      >
+        <div className="text-white/90 text-xl tracking-[0.35em]">{title}</div>
+        <div className="text-slate-400 text-[11px] tracking-[0.3em] mt-1">{subtitle}</div>
+      </div>
     </div>
   );
 };
