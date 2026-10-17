@@ -67,6 +67,7 @@ export function runProgram(factory: GameFactory, opts: RunOptions): RunResult {
       },
       keysJustPressed: keys,
       keysDown: keys,
+      frame: { width: painter.width, height: painter.height },
     };
     try {
       program.update(dt, input, t);

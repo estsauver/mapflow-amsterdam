@@ -213,6 +213,7 @@ const idleInput: Input = {
   pointer: { x: -1, y: -1, down: false, justPressed: false, justReleased: false, inside: false },
   keysJustPressed: new Set(),
   keysDown: new Set(),
+  frame: { width: 960, height: LOGICAL_HEIGHT },
 };
 
 describe.each([700, 1300])('estimator: layout at width %i', width => {

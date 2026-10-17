@@ -159,7 +159,12 @@ const ConsoleStage = ({ program, startAt = 0, duration = FIDELITY_DURATION, limi
           shrink: 1 - 0.008 * fid.tilt,
         };
 
-        const input: Input = { pointer: { ...pointer }, keysJustPressed, keysDown };
+        const input: Input = {
+          pointer: { ...pointer },
+          keysJustPressed,
+          keysDown,
+          frame: { width: frame.logicalWidth, height: frame.logicalHeight },
+        };
         game.update(dt, input, time);
         painter.beginFrame(frame, time, { bevel: fid.bevel });
         game.draw(painter);

@@ -104,6 +104,8 @@ export interface Input {
   pointer: PointerState;
   keysJustPressed: ReadonlySet<string>;
   keysDown: ReadonlySet<string>;
+  /** Logical frame size for this update, so hit rects can be laid out without waiting for draw(). */
+  frame: { width: number; height: number };
 }
 
 export interface GameHost {

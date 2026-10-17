@@ -40,7 +40,9 @@ Emoji work in `text`. Use `shadow` for glow text instead of layering.
 ## Input
 
 `input.pointer` is in logical coordinates with `justPressed` true for exactly
-one frame; do hit-tests in `update`. `keysJustPressed` carries `KeyboardEvent.key`
+one frame; do hit-tests in `update`. `input.frame` carries the logical width
+and height, so edge-anchored hit rects can be computed in `update` without
+waiting for a `draw`. `keysJustPressed` carries `KeyboardEvent.key`
 values; leave the arrow keys alone (the dialog uses them). Open links through
 `host.openUrl(url)` from the factory's `host` argument, never `window`.
 

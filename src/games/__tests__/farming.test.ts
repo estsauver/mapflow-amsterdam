@@ -400,6 +400,7 @@ function hoverRun(width: number, frames: number, pointerAt: (frame: number) => {
       pointer: { x, y, down: false, justPressed: false, justReleased: false, inside: x >= 0 && y >= 0 && x <= width && y <= LOGICAL_HEIGHT },
       keysJustPressed: new Set(),
       keysDown: new Set(),
+      frame: { width, height: LOGICAL_HEIGHT },
     };
     program.update(1 / FPS, input, t);
     painter.beginFrame(i, t);
