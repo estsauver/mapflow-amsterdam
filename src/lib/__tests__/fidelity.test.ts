@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { FIDELITY_DURATION, FIDELITY_ERAS, fidelityAt, fidelityFinal } from '../fidelity';
+import { FIDELITY_DURATION, FIDELITY_ERAS, applyLimits, fidelityAt, fidelityFinal } from '../fidelity';
 
-// The fidelity ramp drives the retro -> modern presentation of the project games.
+// The fidelity ramp drives the retro -> modern rendering of the project games.
 // These tests pin the shape of the curve rather than exact numbers.
 
 const sample = (duration: number, stepSeconds: number) => {
@@ -11,13 +11,18 @@ const sample = (duration: number, stepSeconds: number) => {
 };
 
 describe('fidelityAt', () => {
-  it('starts fully retro at t <= 0', () => {
+  it('starts as an 8-bit console at t <= 0', () => {
     for (const t of [0, -1, -100]) {
       const f = fidelityAt(t);
       expect(f.era).toBe('eight-bit');
-      expect(f.pixelSize).toBeGreaterThanOrEqual(6);
+      expect(f.virtualHeight).toBeLessThanOrEqual(240);
       expect(f.posterizeLevels).toBeLessThanOrEqual(6);
+      expect(f.dither).toBeGreaterThanOrEqual(0.9);
       expect(f.scanlines).toBeGreaterThan(0.3);
+      expect(f.mask).toBeGreaterThan(0);
+      expect(f.smooth).toBe(0);
+      expect(f.bevel).toBe(0);
+      expect(f.parallax).toBe(0);
       expect(f.bloom).toBe(0);
       expect(f.lighting).toBe(0);
     }
@@ -29,9 +34,15 @@ describe('fidelityAt', () => {
       expect(fidelityAt(t)).toEqual(final);
     }
     expect(final.era).toBe('modern');
-    expect(final.pixelSize).toBe(1);
+    expect(final.virtualHeight).toBeGreaterThanOrEqual(1080);
     expect(final.posterizeLevels).toBe(256);
+    expect(final.dither).toBe(0);
     expect(final.scanlines).toBe(0);
+    expect(final.mask).toBe(0);
+    expect(final.barrel).toBe(0);
+    expect(final.smooth).toBe(1);
+    expect(final.bevel).toBe(1);
+    expect(final.parallax).toBe(1);
     expect(final.bloom).toBeGreaterThan(0);
     expect(final.lighting).toBeGreaterThan(0);
   });
@@ -39,16 +50,23 @@ describe('fidelityAt', () => {
   it('only ever increases fidelity over time', () => {
     const s = sample(FIDELITY_DURATION, 0.1);
     for (let i = 1; i < s.length; i++) {
-      expect(s[i].pixelSize).toBeLessThanOrEqual(s[i - 1].pixelSize);
-      expect(s[i].posterizeLevels).toBeGreaterThanOrEqual(s[i - 1].posterizeLevels);
-      expect(s[i].scanlines).toBeLessThanOrEqual(s[i - 1].scanlines);
-      expect(s[i].bloom).toBeGreaterThanOrEqual(s[i - 1].bloom);
-      expect(s[i].lighting).toBeGreaterThanOrEqual(s[i - 1].lighting);
+      const a = s[i - 1], b = s[i];
+      expect(b.virtualHeight).toBeGreaterThanOrEqual(a.virtualHeight);
+      expect(b.posterizeLevels).toBeGreaterThanOrEqual(a.posterizeLevels);
+      expect(b.smooth).toBeGreaterThanOrEqual(a.smooth);
+      expect(b.bevel).toBeGreaterThanOrEqual(a.bevel);
+      expect(b.parallax).toBeGreaterThanOrEqual(a.parallax);
+      expect(b.bloom).toBeGreaterThanOrEqual(a.bloom);
+      expect(b.lighting).toBeGreaterThanOrEqual(a.lighting);
+      expect(b.dither).toBeLessThanOrEqual(a.dither);
+      expect(b.scanlines).toBeLessThanOrEqual(a.scanlines);
+      expect(b.mask).toBeLessThanOrEqual(a.mask);
+      expect(b.barrel).toBeLessThanOrEqual(a.barrel);
     }
   });
 
-  it('gets text readable (pixelSize <= 2) within the first quarter of the ramp', () => {
-    expect(fidelityAt(FIDELITY_DURATION * 0.25).pixelSize).toBeLessThanOrEqual(2);
+  it('reaches a readable 360 lines within the first quarter of the ramp', () => {
+    expect(fidelityAt(FIDELITY_DURATION * 0.25).virtualHeight).toBeGreaterThanOrEqual(360);
   });
 
   it('passes through every era in order', () => {
@@ -58,19 +76,16 @@ describe('fidelityAt', () => {
     expect(seen).toEqual([...FIDELITY_ERAS]);
   });
 
-  it('is continuous at 60fps (no visible pops) apart from integer pixel steps', () => {
+  it('is continuous at 60fps (no visible pops)', () => {
     const s = sample(FIDELITY_DURATION, 1 / 60);
     for (let i = 1; i < s.length; i++) {
       const a = s[i - 1], b = s[i];
-      expect(Math.abs(a.pixelSize - b.pixelSize)).toBeLessThanOrEqual(1);
-      expect(Math.abs(a.scanlines - b.scanlines)).toBeLessThan(0.02);
-      expect(Math.abs(a.bloom - b.bloom)).toBeLessThan(0.02);
-      expect(Math.abs(a.lighting - b.lighting)).toBeLessThan(0.02);
-      expect(Math.abs(a.saturation - b.saturation)).toBeLessThan(0.02);
-      expect(Math.abs(a.contrast - b.contrast)).toBeLessThan(0.02);
+      expect(Math.abs(a.virtualHeight - b.virtualHeight)).toBeLessThan(8);
+      for (const k of ['dither', 'scanlines', 'mask', 'smooth', 'bevel', 'parallax', 'bloom', 'lighting', 'saturation', 'contrast', 'vignette', 'grain', 'aberration'] as const) {
+        expect(Math.abs(a[k] - b[k]), k).toBeLessThan(0.03);
+      }
+      expect(Math.abs(a.barrel - b.barrel)).toBeLessThan(0.005);
       expect(Math.abs(a.tilt - b.tilt)).toBeLessThan(0.2);
-      expect(Math.abs(a.vignette - b.vignette)).toBeLessThan(0.02);
-      expect(Math.abs(a.grain - b.grain)).toBeLessThan(0.02);
     }
   });
 
@@ -78,5 +93,16 @@ describe('fidelityAt', () => {
     expect(fidelityAt(5, 10).era).toBe(fidelityAt(FIDELITY_DURATION / 2).era);
     expect(() => fidelityAt(1, 0)).toThrow();
     expect(() => fidelityAt(1, -3)).toThrow();
+  });
+});
+
+describe('applyLimits', () => {
+  it('caps parameters without touching the rest', () => {
+    const f = fidelityFinal();
+    const capped = applyLimits(f, { bloom: 0.2, tilt: 0 });
+    expect(capped.bloom).toBe(0.2);
+    expect(capped.tilt).toBe(0);
+    expect(capped.lighting).toBe(f.lighting);
+    expect(applyLimits(f)).toEqual(f);
   });
 });

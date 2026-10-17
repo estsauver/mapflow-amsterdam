@@ -246,3 +246,17 @@
 .mapboxgl-ctrl-attrib {
   display: none !important;
 }
+
+/* Era label shown by the console stage when the fidelity ramp changes era. */
+@keyframes console-era-tag {
+  0% { opacity: 0; transform: translateY(4px); }
+  12% { opacity: 1; transform: none; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.console-era-tag {
+  animation: console-era-tag 2.6s ease forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .console-era-tag { animation: none; opacity: 0; }
+}

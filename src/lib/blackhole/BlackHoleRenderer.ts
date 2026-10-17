@@ -1,13 +1,8 @@
 import { AdaptiveResolution } from './adaptiveResolution';
 import { SHADER_STEP } from './geodesic';
-import {
-  BLOOM_DOWN_FRAG,
-  BLOOM_PREFILTER_FRAG,
-  BLOOM_UP_FRAG,
-  COMPOSITE_FRAG,
-  FULLSCREEN_VERT,
-  SCENE_FRAG,
-} from './shaders';
+import { COMPOSITE_FRAG, SCENE_FRAG } from './shaders';
+import { BloomPass } from '../gl/BloomPass';
+import { Program, Target, bindTarget, createProgram, createTarget, deleteTarget, drawFullscreen, supportsHdrTargets } from '../gl/core';
 
 /**
  * WebGL2 renderer for the Anthropic black hole. Owns the GL context, render
@@ -24,19 +19,6 @@ export interface BlackHoleRendererOptions {
   maxInternalWidth?: number;
 }
 
-interface Program {
-  program: WebGLProgram;
-  uniforms: Record<string, WebGLUniformLocation | null>;
-}
-
-interface Target {
-  fbo: WebGLFramebuffer;
-  tex: WebGLTexture;
-  width: number;
-  height: number;
-}
-
-const BLOOM_LEVELS = 4;
 const CAMERA_DISTANCE = 13.0;
 const CAMERA_ELEVATION = 0.17; // radians above the disk plane
 const TAN_HALF_FOV = 0.5;
@@ -61,13 +43,10 @@ export class BlackHoleRenderer {
   private hdr = false;
   private programs!: {
     scene: Program;
-    prefilter: Program;
-    down: Program;
-    up: Program;
     composite: Program;
   };
+  private bloom!: BloomPass;
   private sceneTarget: Target | null = null;
-  private bloomTargets: Target[] = [];
   // GPU time has a 10 ms budget (headroom under a 16.7 ms frame); the RAF-cadence
   // fallback keeps the frame budget itself.
   private readonly resolution = new AdaptiveResolution({ min: 0.4, max: 1, window: 15, step: 0.1 });
@@ -195,6 +174,7 @@ export class BlackHoleRenderer {
     this.releaseTargets();
     for (const q of this.pendingQueries) gl.deleteQuery(q);
     this.pendingQueries = [];
+    this.bloom?.dispose();
     for (const p of Object.values(this.programs ?? {})) gl.deleteProgram(p.program);
     // Deliberately no loseContext(): React may remount on the same canvas, and the
     // browser reclaims the context once the canvas element is garbage collected.
@@ -244,22 +224,12 @@ export class BlackHoleRenderer {
     const t0 = performance.now();
     this.timerExt = gl.getExtension('EXT_disjoint_timer_query_webgl2');
     this.pendingQueries = [];
-    this.hdr = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
-    const vert = compileShader(gl, gl.VERTEX_SHADER, FULLSCREEN_VERT);
-    const make = (frag: string, uniforms: string[]): Program => {
-      const program = linkProgram(gl, vert, compileShader(gl, gl.FRAGMENT_SHADER, frag));
-      const map: Record<string, WebGLUniformLocation | null> = {};
-      for (const u of uniforms) map[u] = gl.getUniformLocation(program, u);
-      return { program, uniforms: map };
-    };
+    this.hdr = supportsHdrTargets(gl);
     this.programs = {
-      scene: make(SCENE_FRAG, ['uResolution', 'uTime', 'uCamPos', 'uCamBasis', 'uTanHalfFov', 'uMaxSteps', 'uDiskGain', 'uDebug']),
-      prefilter: make(BLOOM_PREFILTER_FRAG, ['uTex', 'uTexel', 'uThreshold', 'uKnee']),
-      down: make(BLOOM_DOWN_FRAG, ['uTex', 'uTexel']),
-      up: make(BLOOM_UP_FRAG, ['uTex', 'uTexel']),
-      composite: make(COMPOSITE_FRAG, ['uScene', 'uBloom', 'uBloomStrength', 'uExposure', 'uAberration', 'uTime']),
+      scene: createProgram(gl, SCENE_FRAG, ['uResolution', 'uTime', 'uCamPos', 'uCamBasis', 'uTanHalfFov', 'uMaxSteps', 'uDiskGain', 'uDebug']),
+      composite: createProgram(gl, COMPOSITE_FRAG, ['uScene', 'uBloom', 'uBloomStrength', 'uExposure', 'uAberration', 'uTime']),
     };
-    gl.deleteShader(vert);
+    this.bloom = new BloomPass(gl, 4);
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
     this.compileMs = performance.now() - t0;
@@ -281,58 +251,21 @@ export class BlackHoleRenderer {
     const [w, h] = this.internalSize();
     if (!force && this.sceneTarget && this.sceneTarget.width === w && this.sceneTarget.height === h) return;
     this.releaseTargets();
-    this.sceneTarget = this.createTarget(w, h);
-    this.bloomTargets = [];
-    let bw = w, bh = h;
-    for (let i = 0; i < BLOOM_LEVELS; i++) {
-      bw = Math.max(2, Math.floor(bw / 2));
-      bh = Math.max(2, Math.floor(bh / 2));
-      this.bloomTargets.push(this.createTarget(bw, bh));
+    let scene = createTarget(this.gl, w, h, { hdr: this.hdr });
+    if (!scene && this.hdr) {
+      // Driver advertised float colour buffers but refused one; use 8-bit targets instead.
+      this.hdr = false;
+      scene = createTarget(this.gl, w, h, { hdr: false });
     }
+    if (!scene) throw new Error('Could not allocate the scene framebuffer');
+    this.sceneTarget = scene;
+    if (!this.bloom.resize(w, h, this.hdr)) throw new Error('Could not allocate the bloom framebuffers');
   }
 
   private releaseTargets(): void {
-    const gl = this.gl;
-    const free = (t: Target | null) => {
-      if (!t) return;
-      gl.deleteFramebuffer(t.fbo);
-      gl.deleteTexture(t.tex);
-    };
-    free(this.sceneTarget);
+    deleteTarget(this.gl, this.sceneTarget);
     this.sceneTarget = null;
-    this.bloomTargets.forEach(free);
-    this.bloomTargets = [];
-  }
-
-  private createTarget(width: number, height: number): Target {
-    const gl = this.gl;
-    const tex = gl.createTexture()!;
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    if (this.hdr) {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
-    } else {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    }
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    const fbo = gl.createFramebuffer()!;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    if (status !== gl.FRAMEBUFFER_COMPLETE) {
-      if (this.hdr) {
-        // Driver advertised float colour buffers but refused one; fall back to 8-bit targets.
-        this.hdr = false;
-        gl.deleteFramebuffer(fbo);
-        gl.deleteTexture(tex);
-        return this.createTarget(width, height);
-      }
-      throw new Error(`Framebuffer incomplete: 0x${status.toString(16)}`);
-    }
-    return { fbo, tex, width, height };
+    this.bloom.release();
   }
 
   private camera(): { pos: [number, number, number]; basis: Float32Array } {
@@ -433,8 +366,7 @@ export class BlackHoleRenderer {
     const gl = this.gl;
     const scene = this.sceneTarget!;
     const P = this.programs;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, scene.fbo);
-    gl.viewport(0, 0, scene.width, scene.height);
+    bindTarget(gl, scene);
     gl.useProgram(P.scene.program);
     gl.uniform2f(P.scene.uniforms.uResolution, scene.width, scene.height);
     gl.uniform1f(P.scene.uniforms.uTime, this.time);
@@ -444,96 +376,33 @@ export class BlackHoleRenderer {
     gl.uniform1i(P.scene.uniforms.uMaxSteps, SHADER_STEP.maxSteps);
     gl.uniform1i(P.scene.uniforms.uDebug, this.debug);
     gl.uniform1f(P.scene.uniforms.uDiskGain, this.hdr ? 0.9 : 0.7);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    drawFullscreen(gl);
   }
 
   private passBloom(): void {
-    const gl = this.gl;
     const scene = this.sceneTarget!;
-    const P = this.programs;
-    gl.activeTexture(gl.TEXTURE0);
-    const b = this.bloomTargets;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, b[0].fbo);
-    gl.viewport(0, 0, b[0].width, b[0].height);
-    gl.useProgram(P.prefilter.program);
-    gl.bindTexture(gl.TEXTURE_2D, scene.tex);
-    gl.uniform1i(P.prefilter.uniforms.uTex, 0);
-    gl.uniform2f(P.prefilter.uniforms.uTexel, 1 / scene.width, 1 / scene.height);
-    gl.uniform1f(P.prefilter.uniforms.uThreshold, this.hdr ? 1.0 : 0.55);
-    gl.uniform1f(P.prefilter.uniforms.uKnee, this.hdr ? 0.6 : 0.3);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-    gl.useProgram(P.down.program);
-    gl.uniform1i(P.down.uniforms.uTex, 0);
-    for (let i = 1; i < b.length; i++) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, b[i].fbo);
-      gl.viewport(0, 0, b[i].width, b[i].height);
-      gl.bindTexture(gl.TEXTURE_2D, b[i - 1].tex);
-      gl.uniform2f(P.down.uniforms.uTexel, 1 / b[i - 1].width, 1 / b[i - 1].height);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    }
-
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE);
-    gl.useProgram(P.up.program);
-    gl.uniform1i(P.up.uniforms.uTex, 0);
-    for (let i = b.length - 1; i > 0; i--) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, b[i - 1].fbo);
-      gl.viewport(0, 0, b[i - 1].width, b[i - 1].height);
-      gl.bindTexture(gl.TEXTURE_2D, b[i].tex);
-      gl.uniform2f(P.up.uniforms.uTexel, 1 / b[i].width, 1 / b[i].height);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    }
-    gl.disable(gl.BLEND);
+    this.bloom.run(scene.tex, { threshold: this.hdr ? 1.0 : 0.55, knee: this.hdr ? 0.6 : 0.3 });
   }
 
   private passComposite(): void {
     const gl = this.gl;
     const scene = this.sceneTarget!;
-    const b = this.bloomTargets;
     const P = this.programs;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    bindTarget(gl, null, this.canvas.width, this.canvas.height);
     gl.useProgram(P.composite.program);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, scene.tex);
     gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, b[0].tex);
+    gl.bindTexture(gl.TEXTURE_2D, this.bloom.texture);
     gl.uniform1i(P.composite.uniforms.uScene, 0);
     gl.uniform1i(P.composite.uniforms.uBloom, 1);
     gl.uniform1f(P.composite.uniforms.uBloomStrength, 0.7);
     gl.uniform1f(P.composite.uniforms.uExposure, 1.0);
     gl.uniform1f(P.composite.uniforms.uAberration, 0.012);
     gl.uniform1f(P.composite.uniforms.uTime, this.time);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    drawFullscreen(gl);
     gl.activeTexture(gl.TEXTURE0);
   }
-}
-
-function compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {
-  const shader = gl.createShader(type)!;
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS) && !gl.isContextLost()) {
-    const log = gl.getShaderInfoLog(shader);
-    gl.deleteShader(shader);
-    throw new Error(`Shader compile failed: ${log}`);
-  }
-  return shader;
-}
-
-function linkProgram(gl: WebGL2RenderingContext, vert: WebGLShader, frag: WebGLShader): WebGLProgram {
-  const program = gl.createProgram()!;
-  gl.attachShader(program, vert);
-  gl.attachShader(program, frag);
-  gl.linkProgram(program);
-  gl.deleteShader(frag);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost()) {
-    const log = gl.getProgramInfoLog(program);
-    gl.deleteProgram(program);
-    throw new Error(`Program link failed: ${log}`);
-  }
-  return program;
 }
 
 type V3 = [number, number, number];

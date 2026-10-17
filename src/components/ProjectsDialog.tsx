@@ -11,7 +11,8 @@ import SqlGame from './SqlGame';
 import SpotlightGame from './SpotlightGame';
 import StorybookGame from './StorybookGame';
 import BlackHoleScene from './BlackHoleScene';
-import FidelityRamp from './FidelityRamp';
+import ConsoleStage from '@/lib/console/ConsoleStage';
+import { createTestPattern } from '@/lib/console/testPattern';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -150,25 +151,28 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, goToPrevProject, goToNextProject]);
 
-  // Development aid: /projects/<id>?t=12 starts the fidelity ramp 12 s in.
-  const fidelityStartAt = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('t')) || 0 : 0;
+  // Development aids: /projects/<id>?t=12 starts the fidelity ramp 12 s in;
+  // /projects/<id>?console=test shows the console test pattern instead of the game.
+  const devParams = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
+  const fidelityStartAt = Number(devParams?.get('t')) || 0;
 
   const renderProjectGame = () => {
+    if (devParams?.get('console') === 'test') {
+      return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} />;
+    }
     switch (currentProject.id) {
-      // Each game is wrapped in a FidelityRamp that evolves its presentation from
-      // retro to modern. The key restarts the ramp when the project changes.
       case 'apollo':
-        return <FidelityRamp startAt={fidelityStartAt} key="apollo" limits={{ scanlines: 0.25 }}><FarmingGame /></FidelityRamp>;
+        return <FarmingGame />;
       case 'anthropic':
         return <BlackHoleScene />;
       case 'universal-estimator':
-        return <FidelityRamp startAt={fidelityStartAt} key="universal-estimator" limits={{ scanlines: 0.25, lighting: 0.5, aberration: 0.15 }}><EstimatorGame /></FidelityRamp>;
+        return <EstimatorGame />;
       case 'nosql':
-        return <FidelityRamp startAt={fidelityStartAt} key="nosql" limits={{ scanlines: 0.3, bloom: 0.45, lighting: 0.5, aberration: 0.15 }}><SqlGame /></FidelityRamp>;
+        return <SqlGame />;
       case 'dspy':
-        return <FidelityRamp startAt={fidelityStartAt} key="dspy" limits={{ vignette: 0.25, lighting: 0.45, aberration: 0.12 }}><SpotlightGame /></FidelityRamp>;
+        return <SpotlightGame />;
       case 'childrens':
-        return <FidelityRamp startAt={fidelityStartAt} key="childrens" limits={{ bloom: 0.25, vignette: 0.2, lighting: 0.5, scanlines: 0.35 }}><StorybookGame /></FidelityRamp>;
+        return <StorybookGame />;
       default:
         // Entries with hasGame but no game yet get a placeholder; entries without a game get a plain info panel.
         return (

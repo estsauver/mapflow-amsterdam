@@ -1,22 +1,11 @@
 /**
  * GLSL ES 3.00 sources for the black hole renderer.
  *
- * Pipeline: scene (ray-marched, HDR) → bloom prefilter/downsample/upsample
- * (dual-Kawase style) → composite (chromatic aberration, vignette, ACES,
- * gamma, dither, grain).
+ * Pipeline: scene (ray-marched, HDR) → BloomPass (src/lib/gl) → composite
+ * (chromatic aberration, vignette, ACES, gamma, dither, grain).
  */
 
 import { SHADER_STEP } from './geodesic';
-
-export const FULLSCREEN_VERT = `#version 300 es
-out vec2 vUv;
-void main() {
-  // One oversized triangle covers the viewport; no vertex buffers needed.
-  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
-  vUv = p;
-  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-}
-`;
 
 /**
  * Ray-marches null geodesics in the Schwarzschild metric (r_s = 1) with the
@@ -283,64 +272,6 @@ void main() {
   if (!captured) col += trans * bg;
 
   fragColor = vec4(col, 1.0);
-}
-`;
-
-export const BLOOM_PREFILTER_FRAG = `#version 300 es
-precision highp float;
-uniform sampler2D uTex;
-uniform vec2 uTexel;       // 1 / source size
-uniform float uThreshold;
-uniform float uKnee;
-in vec2 vUv;
-out vec4 fragColor;
-void main() {
-  vec3 s = texture(uTex, vUv + vec2(-0.5, -0.5) * uTexel).rgb
-         + texture(uTex, vUv + vec2( 0.5, -0.5) * uTexel).rgb
-         + texture(uTex, vUv + vec2(-0.5,  0.5) * uTexel).rgb
-         + texture(uTex, vUv + vec2( 0.5,  0.5) * uTexel).rgb;
-  s *= 0.25;
-  float br = max(s.r, max(s.g, s.b));
-  float soft = clamp(br - uThreshold + uKnee, 0.0, 2.0 * uKnee);
-  soft = soft * soft / (4.0 * uKnee + 1e-4);
-  float contrib = max(soft, br - uThreshold) / max(br, 1e-4);
-  fragColor = vec4(s * contrib, 1.0);
-}
-`;
-
-export const BLOOM_DOWN_FRAG = `#version 300 es
-precision highp float;
-uniform sampler2D uTex;
-uniform vec2 uTexel;       // 1 / source size
-in vec2 vUv;
-out vec4 fragColor;
-void main() {
-  vec3 c = texture(uTex, vUv).rgb * 4.0;
-  c += texture(uTex, vUv + vec2(-1.0, -1.0) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2( 1.0, -1.0) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2(-1.0,  1.0) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2( 1.0,  1.0) * uTexel).rgb;
-  fragColor = vec4(c / 8.0, 1.0);
-}
-`;
-
-export const BLOOM_UP_FRAG = `#version 300 es
-precision highp float;
-uniform sampler2D uTex;
-uniform vec2 uTexel;       // 1 / source size
-in vec2 vUv;
-out vec4 fragColor;
-void main() {
-  vec3 c = vec3(0.0);
-  c += texture(uTex, vUv + vec2(-1.0,  0.0) * uTexel).rgb * 2.0;
-  c += texture(uTex, vUv + vec2( 1.0,  0.0) * uTexel).rgb * 2.0;
-  c += texture(uTex, vUv + vec2( 0.0, -1.0) * uTexel).rgb * 2.0;
-  c += texture(uTex, vUv + vec2( 0.0,  1.0) * uTexel).rgb * 2.0;
-  c += texture(uTex, vUv + vec2(-0.5, -0.5) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2( 0.5, -0.5) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2(-0.5,  0.5) * uTexel).rgb;
-  c += texture(uTex, vUv + vec2( 0.5,  0.5) * uTexel).rgb;
-  fragColor = vec4(c / 12.0, 1.0);
 }
 `;
 
