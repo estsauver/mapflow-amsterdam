@@ -5,14 +5,14 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useIsMobile } from '@/hooks/use-mobile';
-import FarmingGame from './FarmingGame';
-import EstimatorGame from './EstimatorGame';
-import SqlGame from './SqlGame';
-import SpotlightGame from './SpotlightGame';
-import StorybookGame from './StorybookGame';
 import BlackHoleScene from './BlackHoleScene';
 import ConsoleStage from '@/lib/console/ConsoleStage';
 import { createTestPattern } from '@/lib/console/testPattern';
+import { createFarmingGame } from '@/games/farming';
+import { createEstimatorGame } from '@/games/estimator';
+import { createSqlGame } from '@/games/sql';
+import { createSpotlightGame } from '@/games/spotlight';
+import { createStorybookGame } from '@/games/storybook';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -161,18 +161,21 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
       return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} />;
     }
     switch (currentProject.id) {
+      // Each game runs on the console stage, which renders it through the fidelity
+      // ramp. The key restarts the ramp when the project changes. Caps keep the
+      // text-heavy games legible and the light-themed storybook from blooming out.
       case 'apollo':
-        return <FarmingGame />;
+        return <ConsoleStage key="apollo" program={createFarmingGame} startAt={fidelityStartAt} />;
       case 'anthropic':
         return <BlackHoleScene />;
       case 'universal-estimator':
-        return <EstimatorGame />;
+        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} limits={{ lighting: 0.5, aberration: 0.15 }} />;
       case 'nosql':
-        return <SqlGame />;
+        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} limits={{ lighting: 0.5, aberration: 0.15 }} />;
       case 'dspy':
-        return <SpotlightGame />;
+        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} limits={{ lighting: 0.45, aberration: 0.12 }} />;
       case 'childrens':
-        return <StorybookGame />;
+        return <ConsoleStage key="childrens" program={createStorybookGame} startAt={fidelityStartAt} limits={{ bloom: 0.2, vignette: 0.2, lighting: 0.5 }} />;
       default:
         // Entries with hasGame but no game yet get a placeholder; entries without a game get a plain info panel.
         return (
