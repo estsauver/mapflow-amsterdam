@@ -1,17 +1,18 @@
 /**
- * The fidelity ramp: how a project game's rendering evolves from an 8-bit
- * console to a modern, lit, bloomed render while you watch.
+ * The fidelity ramp: how a project game's rendering evolves from a brief
+ * 16-bit nod through HD to a cinematic render with shadows, depth of field,
+ * light shafts and lens effects while you watch.
  *
  * Pure function of elapsed time so it can be tested and reused. The console
  * stage renders each game at `virtualHeight` lines and post-processes it on
  * the GPU with the remaining parameters.
  */
 
-export const FIDELITY_ERAS = ['eight-bit', 'sixteen-bit', 'early-3d', 'modern'] as const;
+export const FIDELITY_ERAS = ['sixteen-bit', 'early-3d', 'hd', 'ray-traced', 'cinematic'] as const;
 export type FidelityEra = (typeof FIDELITY_ERAS)[number];
 
-/** Seconds from fully retro to fully modern. */
-export const FIDELITY_DURATION = 24;
+/** Seconds from the 16-bit nod to the cinematic end state. */
+export const FIDELITY_DURATION = 28;
 
 export interface FidelityParams {
   era: FidelityEra;
@@ -47,38 +48,62 @@ export interface FidelityParams {
   vignette: number;
   /** Chromatic aberration offset in output pixels. */
   aberration: number;
+  /** Depth of field: blur of the background layer, 0..1. */
+  dof: number;
+  /** Atmospheric haze on the background layer, 0..1. */
+  fog: number;
+  /** Screen-space contact shadows from the moving light, 0..1. */
+  shadows: number;
+  /** Volumetric light shafts, 0..1. */
+  shafts: number;
+  /** Anamorphic lens flare, 0..1. */
+  flare: number;
+  /** Drifting dust motes lit by the light, 0..1. */
+  dust: number;
+  /** Filmic split-tone grading, 0..1. */
+  grade: number;
 }
 
 type Key = [u: number, value: number];
 
-// Normalised time u ∈ [0, 1]. Tracks the tests require to be monotone are:
-// virtualHeight ↑, posterizeLevels ↑, smooth ↑, bevel ↑, parallax ↑, bloom ↑,
-// lighting ↑, dither ↓, scanlines ↓, mask ↓, barrel ↓.
+// Normalised time u ∈ [0, 1] over FIDELITY_DURATION. Eras: 16-bit to 0.11,
+// early 3D to 0.25, HD to 0.46, ray-traced to 0.71, cinematic to 1. Tracks the
+// tests require to be monotone: virtualHeight, posterizeLevels, smooth, bevel,
+// parallax, bloom, lighting, dof, fog, shadows, shafts, flare, dust, grade ↑;
+// dither, scanlines, mask, barrel, grain ↓.
 const TRACKS: Record<Exclude<keyof FidelityParams, 'era'>, Key[]> = {
-  virtualHeight:   [[0, 216], [0.15, 216], [0.22, 360], [0.4, 360], [0.47, 540], [0.7, 540], [0.8, 1080], [1, 1080]],
-  posterizeLevels: [[0, 4], [0.1, 4], [0.2, 8], [0.3, 16], [0.4, 32], [0.55, 64], [0.7, 256], [1, 256]],
-  dither:          [[0, 1], [0.4, 1], [0.7, 0.25], [0.85, 0], [1, 0]],
-  scanlines:       [[0, 0.5], [0.15, 0.5], [0.4, 0.2], [0.7, 0], [1, 0]],
-  mask:            [[0, 0.35], [0.15, 0.35], [0.4, 0.22], [0.7, 0], [1, 0]],
-  barrel:          [[0, 0.07], [0.4, 0.045], [0.7, 0], [1, 0]],
-  smooth:          [[0, 0], [0.4, 0], [0.55, 1], [1, 1]],
-  bevel:           [[0, 0], [0.55, 0], [0.8, 0.6], [1, 1]],
-  parallax:        [[0, 0], [0.6, 0], [0.85, 0.7], [1, 1]],
-  saturation:      [[0, 0.85], [0.4, 0.95], [0.7, 1.0], [1, 1.08]],
-  contrast:        [[0, 1.18], [0.4, 1.08], [0.7, 1.0], [1, 1.0]],
-  bloom:           [[0, 0], [0.55, 0], [0.8, 0.45], [1, 0.7]],
-  lighting:        [[0, 0], [0.45, 0], [0.75, 0.45], [1, 0.75]],
-  tilt:            [[0, 0], [0.4, 0], [0.55, 7], [0.7, 4], [1, 2.5]],
-  grain:           [[0, 0.16], [0.4, 0.12], [0.7, 0.07], [1, 0.04]],
-  vignette:        [[0, 0.55], [0.4, 0.45], [0.7, 0.3], [1, 0.25]],
-  aberration:      [[0, 0], [0.4, 0], [0.55, 1.0], [0.7, 0.4], [0.85, 0.3], [1, 0.3]],
+  virtualHeight:   [[0, 360], [0.08, 360], [0.13, 540], [0.22, 540], [0.3, 1080], [1, 1080]],
+  posterizeLevels: [[0, 16], [0.06, 16], [0.12, 32], [0.18, 64], [0.22, 256], [1, 256]],
+  dither:          [[0, 0.6], [0.1, 0.6], [0.2, 0], [1, 0]],
+  scanlines:       [[0, 0.25], [0.08, 0.25], [0.2, 0], [1, 0]],
+  mask:            [[0, 0.12], [0.08, 0.12], [0.18, 0], [1, 0]],
+  barrel:          [[0, 0.03], [0.1, 0.03], [0.2, 0], [1, 0]],
+  smooth:          [[0, 0], [0.1, 0], [0.16, 1], [1, 1]],
+  bevel:           [[0, 0], [0.28, 0], [0.42, 0.7], [0.6, 1], [1, 1]],
+  parallax:        [[0, 0], [0.3, 0], [0.5, 0.7], [0.7, 1], [1, 1]],
+  saturation:      [[0, 0.92], [0.2, 1.0], [0.7, 1.05], [1, 1.08]],
+  contrast:        [[0, 1.08], [0.2, 1.02], [1, 1.0]],
+  bloom:           [[0, 0], [0.25, 0], [0.4, 0.4], [0.7, 0.6], [1, 0.7]],
+  lighting:        [[0, 0], [0.28, 0], [0.45, 0.5], [0.7, 0.75], [1, 0.8]],
+  tilt:            [[0, 0], [0.11, 0], [0.18, 7], [0.25, 4], [1, 2.5]],
+  grain:           [[0, 0.06], [0.2, 0.03], [0.7, 0.02], [1, 0.02]],
+  vignette:        [[0, 0.3], [0.2, 0.25], [0.7, 0.22], [1, 0.3]],
+  aberration:      [[0, 0], [0.11, 0], [0.18, 0.8], [0.25, 0.25], [0.7, 0.25], [1, 0.35]],
+  dof:             [[0, 0], [0.46, 0], [0.62, 0.8], [1, 1]],
+  fog:             [[0, 0], [0.5, 0], [0.7, 0.5], [1, 0.6]],
+  shadows:         [[0, 0], [0.46, 0], [0.6, 0.8], [1, 1]],
+  shafts:          [[0, 0], [0.7, 0], [0.85, 0.8], [1, 1]],
+  flare:           [[0, 0], [0.72, 0], [0.9, 1], [1, 1]],
+  dust:            [[0, 0], [0.71, 0], [0.85, 1], [1, 1]],
+  grade:           [[0, 0], [0.65, 0], [0.85, 0.8], [1, 1]],
 };
 
 const ERA_STARTS: [u: number, era: FidelityEra][] = [
-  [0, 'eight-bit'],
-  [0.15, 'sixteen-bit'],
-  [0.4, 'early-3d'],
-  [0.7, 'modern'],
+  [0, 'sixteen-bit'],
+  [0.11, 'early-3d'],
+  [0.25, 'hd'],
+  [0.46, 'ray-traced'],
+  [0.71, 'cinematic'],
 ];
 
 const smoothstep = (x: number) => x * x * (3 - 2 * x);
@@ -127,10 +152,17 @@ export function fidelityAt(seconds: number, duration: number = FIDELITY_DURATION
     grain: v('grain'),
     vignette: v('vignette'),
     aberration: v('aberration'),
+    dof: v('dof'),
+    fog: v('fog'),
+    shadows: v('shadows'),
+    shafts: v('shafts'),
+    flare: v('flare'),
+    dust: v('dust'),
+    grade: v('grade'),
   };
 }
 
-/** The fully modern end state, identical to fidelityAt(duration). */
+/** The cinematic end state, identical to fidelityAt(duration). */
 export function fidelityFinal(): FidelityParams {
   return fidelityAt(FIDELITY_DURATION);
 }

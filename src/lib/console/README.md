@@ -5,8 +5,12 @@ A tiny 2D drawing contract for the project games. A game is a `GameProgram`
 paints the frame. Games never touch the DOM, timers, `Date`, or `Math.random`
 (use `seededRandom` from `random.ts`). The stage calls `update` then `draw`
 once per animation frame and renders the result at an era-dependent
-resolution with GPU post-processing (pixelation, palette, CRT, bloom,
-lighting, parallax, tilt). Games do not implement any of those effects. Without WebGL2 the stage falls
+resolution with GPU post-processing: a brief 16-bit stage (palette, dither,
+light scanlines), then HD with bloom and relief lighting, a ray-traced stage
+with contact shadows, background depth of field and haze, and a cinematic
+stage with light shafts, anamorphic flare, dust and grading, all on a
+perspective-tilted plane with layer parallax. Games do not implement any of
+those effects. Without WebGL2 the stage falls
 back to a Canvas 2D pipeline (`post/Canvas2DPostProcessor.ts`) that keeps
 pixelation, palette and dither at console resolutions, scanlines, grille,
 vignette, a cheap bloom and grain, and drops the tilt, parallax lighting and

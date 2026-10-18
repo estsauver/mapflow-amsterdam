@@ -22,10 +22,11 @@ interface ConsoleStageProps {
 type StageMode = 'webgl2' | 'canvas2d' | 'none';
 
 const ERA_LABEL: Record<FidelityEra, string> = {
-  'eight-bit': '8-BIT ERA',
   'sixteen-bit': '16-BIT ERA',
   'early-3d': 'EARLY 3D ERA',
-  modern: 'MODERN ERA',
+  hd: 'HD ERA',
+  'ray-traced': 'RAY TRACED ERA',
+  cinematic: 'CINEMATIC ERA',
 };
 
 const PERSPECTIVE_DIST = 3.2; // in half-heights of the plane

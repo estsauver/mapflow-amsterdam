@@ -184,11 +184,11 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
       case 'anthropic':
         return <BlackHoleScene forceFallback={forceFallback} />;
       case 'universal-estimator':
-        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15 }} />;
+        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15, dust: 0.5 }} />;
       case 'nosql':
-        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15 }} />;
+        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15, dust: 0.5 }} />;
       case 'dspy':
-        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.45, aberration: 0.12 }} />;
+        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.45, aberration: 0.12, dust: 0.4 }} />;
       case 'childrens':
         return <ConsoleStage key="childrens" program={createStorybookGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ bloom: 0.2, vignette: 0.2, lighting: 0.5 }} />;
       default:

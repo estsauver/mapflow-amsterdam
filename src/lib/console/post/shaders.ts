@@ -28,9 +28,15 @@ uniform float uParallax;     // 0..1
 uniform vec2 uPointer;       // -1..1
 uniform float uLevels;       // colour levels per channel, 256 = off
 uniform float uDither;       // 0..1
+uniform float uDof;          // background blur, 0..1
+uniform float uFog;          // background haze, 0..1
 in vec2 vUv;
 out vec4 fragColor;
 ${COMMON}
+const vec2 POISSON[12] = vec2[12](
+  vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457), vec2(-0.203, 0.621),
+  vec2(0.962, -0.195), vec2(0.473, -0.480), vec2(0.519, 0.767), vec2(0.185, -0.893),
+  vec2(0.507, 0.064), vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598));
 vec4 layerAt(sampler2D t, vec2 uv) {
   // Clamp to texel centres: the layer texture is device-sized and only the
   // top-left vw×vh is drawn, so uv = 1.0 would land on the first undrawn texel.
@@ -43,10 +49,26 @@ float bayer4(vec2 p) {
   int m[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
   return (float(m[idx]) + 0.5) / 16.0;
 }
+// The background layer is the far plane: depth of field blurs it, haze lifts it.
+vec4 backLayer(vec2 uv) {
+  vec4 c = layerAt(uLayer0, uv);
+  if (uDof > 0.01) {
+    vec2 radius = (uDof * 6.0 * uVirtual.y / 540.0) / uVirtual;
+    vec4 acc = c;
+    for (int i = 0; i < 12; i++) acc += layerAt(uLayer0, uv + POISSON[i] * radius);
+    c = acc / 13.0;
+  }
+  if (uFog > 0.001) {
+    float l = luma(c.rgb);
+    vec3 hazed = mix(c.rgb, vec3(l), 0.35) * 0.92 + vec3(0.42, 0.50, 0.62) * c.a * 0.22;
+    c.rgb = mix(c.rgb, hazed, uFog);
+  }
+  return c;
+}
 void main() {
   // Parallax in logical units (10 px at full depth) converted to uv.
   vec2 shift = uPointer * uParallax * (10.0 * uVirtual.y / 540.0) / uVirtual;
-  vec4 back = layerAt(uLayer0, vUv - shift * 0.6);
+  vec4 back = backLayer(vUv - shift * 0.6);
   vec4 mid = layerAt(uLayer1, vUv);
   vec4 front = layerAt(uLayer2, vUv + shift * 0.9);
   // Layers are premultiplied; composite over black.
@@ -138,6 +160,7 @@ uniform vec2 uTexel;
 uniform vec2 uLight;         // uv of the light (0..1)
 uniform float uAspect;
 uniform float uStrength;
+uniform float uShadows;
 in vec2 vUv;
 out vec4 fragColor;
 ${COMMON}
@@ -160,6 +183,17 @@ void main() {
   float occlusion = clamp((around - lum) * 1.5, 0.0, 1.0);
   vec3 lit = col * mix(1.0, 0.72 + 0.55 * diffuse, uStrength) * (1.0 - 0.35 * uStrength * occlusion);
   lit += uStrength * spec * 0.35 * (0.3 + col);
+  // Screen-space contact shadows: march toward the light over the luminance
+  // height field; anything higher on the way casts a soft shadow here.
+  if (uShadows > 0.001) {
+    vec2 stepUv = normalize(toLight + vec2(1e-5)) * uTexel * 2.5 / vec2(uAspect, 1.0);
+    float shadow = 0.0;
+    for (int i = 1; i <= 10; i++) {
+      float hs = luma(texture(uScene, vUv + stepUv * float(i)).rgb);
+      shadow = max(shadow, hs - lum - float(i) * 0.03);
+    }
+    lit *= 1.0 - uShadows * 0.55 * clamp(shadow * 2.5, 0.0, 1.0);
+  }
   fragColor = vec4(lit, 1.0);
 }
 `;
@@ -176,6 +210,13 @@ uniform vec2 uOutput;
 uniform float uScanlines;
 uniform float uMask;
 uniform vec2 uVirtual;
+uniform sampler2D uShafts;
+uniform float uShaftStrength;
+uniform sampler2D uFlare;
+uniform float uFlareStrength;
+uniform float uDust;
+uniform float uGrade;
+uniform vec2 uLight;
 // Perspective tilt (see src/lib/console/tilt.ts for the same math in TS)
 uniform float uRx;
 uniform float uRy;
@@ -235,6 +276,32 @@ void main() {
   scene *= scan * mix(vec3(1.0), grille * 1.18, uMask);
   vec3 bloom = texture(uBloom, uv).rgb;
   vec3 col = scene + bloom * uBloomStrength;
+  col += texture(uShafts, uv).rgb * uShaftStrength * 0.55;
+  col += texture(uFlare, uv).rgb * uFlareStrength * 0.6;
+
+  // Dust motes drifting through the light.
+  if (uDust > 0.001) {
+    float dust = 0.0;
+    for (int i = 0; i < 36; i++) {
+      float fi = float(i);
+      vec2 p0 = vec2(hash12(vec2(fi, 1.7)), hash12(vec2(fi, 9.1)));
+      vec2 vel = (vec2(hash12(vec2(fi, 3.3)), hash12(vec2(fi, 5.5))) - 0.5) * 0.015 + vec2(0.0, 0.006);
+      vec2 p = fract(p0 + vel * uTime);
+      vec2 dd = (uv - p) * vec2(uAspect, 1.0);
+      float r = 0.002 + 0.003 * hash12(vec2(fi, 7.7));
+      float tw = 0.55 + 0.45 * sin(uTime * (0.8 + 1.5 * hash12(vec2(fi, 2.2))) + fi);
+      dust += smoothstep(r, r * 0.2, length(dd)) * tw;
+    }
+    float nearLight = 0.35 + 0.65 * smoothstep(1.0, 0.0, length((uLight - uv) * vec2(uAspect, 1.0)));
+    col += dust * uDust * 0.5 * nearLight * vec3(1.0, 0.95, 0.85);
+  }
+
+  // Filmic split tone: cool shadows, warm highlights.
+  if (uGrade > 0.001) {
+    float l = clamp(luma(col), 0.0, 1.0);
+    vec3 graded = col * (1.0 + vec3(-0.06, 0.0, 0.10) * (1.0 - l) + vec3(0.08, 0.03, -0.06) * l);
+    col = mix(col, graded, uGrade);
+  }
   col = aces(col * 1.05);
   col = toSrgb(col);
   col = mix(uBackground, col, cover);
@@ -243,5 +310,50 @@ void main() {
   col += g * uGrain * 0.18;
   col += (hash12(gl_FragCoord.yx * 1.7 + uTime) - 0.5) * (2.0 / 255.0);
   fragColor = vec4(col, 1.0);
+}
+`;
+
+export const SHAFTS_FRAG = `#version 300 es
+precision highp float;
+uniform sampler2D uScene;    // the blurred bloom chain (already thresholded)
+uniform vec2 uLight;         // uv of the light
+in vec2 vUv;
+out vec4 fragColor;
+${COMMON}
+// Volumetric light shafts: radial blur of the soft highlights toward the light.
+void main() {
+  vec2 toL = uLight - vUv;
+  vec2 stepUv = toL / 24.0;
+  vec2 uv = vUv;
+  vec3 acc = vec3(0.0);
+  float w = 1.0;
+  for (int i = 0; i < 24; i++) {
+    uv += stepUv;
+    acc += texture(uScene, clamp(uv, 0.0, 1.0)).rgb * w;
+    w *= 0.92;
+  }
+  float falloff = smoothstep(1.2, 0.15, length(toL));
+  fragColor = vec4(acc / 24.0 * 1.2 * falloff, 1.0);
+}
+`;
+
+export const FLARE_FRAG = `#version 300 es
+precision highp float;
+uniform sampler2D uTex;
+uniform vec2 uTexel;
+uniform vec2 uDir;
+uniform vec3 uTint;
+in vec2 vUv;
+out vec4 fragColor;
+// Wide directional blur; run twice horizontally for an anamorphic streak.
+void main() {
+  vec3 acc = vec3(0.0);
+  float ws = 0.0;
+  for (int i = -12; i <= 12; i++) {
+    float w = 1.0 - abs(float(i)) / 13.0;
+    acc += texture(uTex, vUv + uDir * uTexel * float(i) * 2.0).rgb * w;
+    ws += w;
+  }
+  fragColor = vec4(acc / ws * uTint, 1.0);
 }
 `;

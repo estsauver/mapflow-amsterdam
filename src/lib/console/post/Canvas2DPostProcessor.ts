@@ -10,8 +10,9 @@ const QUANTIZE_PIXEL_BUDGET = 300_000;
  * available. It keeps the parts of the ramp a 2D canvas can do well: parallax,
  * palette quantisation with ordered dither (at console resolutions), nearest or
  * bilinear upscaling, scanlines, aperture grille, vignette, a cheap bloom and
- * grain. The perspective tilt, barrel distortion, relief lighting and
- * chromatic aberration are GPU-only and are not reproduced here.
+ * grain, plus the background depth of field. The perspective tilt, barrel
+ * distortion, relief lighting, contact shadows, light shafts, lens flare,
+ * dust, grading and chromatic aberration are GPU-only and are not reproduced.
  */
 export class Canvas2DPostProcessor implements PostProcessor {
   readonly kind = 'canvas2d' as const;
@@ -85,7 +86,9 @@ export class Canvas2DPostProcessor implements PostProcessor {
     cc.fillRect(0, 0, vw, vh);
     const shift = ((10 * vh) / 540) * f.parallax;
     const sx = input.pointer.x * shift, sy = input.pointer.y * shift;
+    if (this.filterSupported && f.dof > 0.01) cc.filter = `blur(${((f.dof * 6 * vh) / 540).toFixed(1)}px)`;
     cc.drawImage(this.layers[0], 0, 0, vw, vh, Math.round(0.6 * sx), Math.round(0.6 * sy), vw, vh);
+    if (this.filterSupported) cc.filter = 'none';
     cc.drawImage(this.layers[1], 0, 0, vw, vh, 0, 0, vw, vh);
     cc.drawImage(this.layers[2], 0, 0, vw, vh, Math.round(-0.9 * sx), Math.round(-0.9 * sy), vw, vh);
 

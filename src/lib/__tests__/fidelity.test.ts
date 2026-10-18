@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { FIDELITY_DURATION, FIDELITY_ERAS, applyLimits, fidelityAt, fidelityFinal } from '../fidelity';
 
-// The fidelity ramp drives the retro -> modern rendering of the project games.
-// These tests pin the shape of the curve rather than exact numbers.
+// The fidelity ramp drives the rendering of the project games from a brief
+// 16-bit nod to a cinematic, physically-flavoured render. These tests pin the
+// shape of the curve rather than exact numbers.
 
 const sample = (duration: number, stepSeconds: number) => {
   const out = [] as ReturnType<typeof fidelityAt>[];
@@ -11,29 +12,40 @@ const sample = (duration: number, stepSeconds: number) => {
 };
 
 describe('fidelityAt', () => {
-  it('starts as an 8-bit console at t <= 0', () => {
+  it('starts as a tasteful 16-bit console, never 8-bit mud', () => {
     for (const t of [0, -1, -100]) {
       const f = fidelityAt(t);
-      expect(f.era).toBe('eight-bit');
-      expect(f.virtualHeight).toBeLessThanOrEqual(240);
-      expect(f.posterizeLevels).toBeLessThanOrEqual(6);
-      expect(f.dither).toBeGreaterThanOrEqual(0.9);
-      expect(f.scanlines).toBeGreaterThan(0.3);
-      expect(f.mask).toBeGreaterThan(0);
+      expect(f.era).toBe('sixteen-bit');
+      expect(f.virtualHeight).toBeGreaterThanOrEqual(360);
+      expect(f.virtualHeight).toBeLessThanOrEqual(400);
+      expect(f.posterizeLevels).toBeGreaterThanOrEqual(16);
+      expect(f.posterizeLevels).toBeLessThanOrEqual(32);
+      expect(f.dither).toBeLessThanOrEqual(0.7);
+      expect(f.scanlines).toBeLessThanOrEqual(0.3);
+      expect(f.mask).toBeLessThanOrEqual(0.15);
+      expect(f.barrel).toBeLessThanOrEqual(0.04);
+      expect(f.grain).toBeLessThanOrEqual(0.08);
       expect(f.smooth).toBe(0);
-      expect(f.bevel).toBe(0);
-      expect(f.parallax).toBe(0);
       expect(f.bloom).toBe(0);
       expect(f.lighting).toBe(0);
+      for (const k of ['dof', 'fog', 'shadows', 'shafts', 'flare', 'dust', 'grade'] as const) expect(f[k]).toBe(0);
     }
   });
 
-  it('ends fully modern at t >= duration and matches fidelityFinal()', () => {
+  it('spends most of the ramp past the retro look', () => {
+    const s = sample(FIDELITY_DURATION, 0.1);
+    const retro = s.filter(f => f.era === 'sixteen-bit').length / s.length;
+    expect(retro).toBeLessThan(0.15);
+    const highEnd = s.filter(f => f.era === 'ray-traced' || f.era === 'cinematic').length / s.length;
+    expect(highEnd).toBeGreaterThan(0.5);
+  });
+
+  it('ends cinematic at t >= duration and matches fidelityFinal()', () => {
     const final = fidelityFinal();
     for (const t of [FIDELITY_DURATION, FIDELITY_DURATION + 5, 1e6]) {
       expect(fidelityAt(t)).toEqual(final);
     }
-    expect(final.era).toBe('modern');
+    expect(final.era).toBe('cinematic');
     expect(final.virtualHeight).toBeGreaterThanOrEqual(1080);
     expect(final.posterizeLevels).toBe(256);
     expect(final.dither).toBe(0);
@@ -43,30 +55,27 @@ describe('fidelityAt', () => {
     expect(final.smooth).toBe(1);
     expect(final.bevel).toBe(1);
     expect(final.parallax).toBe(1);
-    expect(final.bloom).toBeGreaterThan(0);
-    expect(final.lighting).toBeGreaterThan(0);
+    expect(final.grain).toBeLessThanOrEqual(0.03);
+    for (const k of ['bloom', 'lighting', 'dof', 'fog', 'shadows', 'shafts', 'flare', 'dust', 'grade'] as const) {
+      expect(final[k], k).toBeGreaterThan(0.5);
+    }
   });
 
   it('only ever increases fidelity over time', () => {
     const s = sample(FIDELITY_DURATION, 0.1);
     for (let i = 1; i < s.length; i++) {
       const a = s[i - 1], b = s[i];
-      expect(b.virtualHeight).toBeGreaterThanOrEqual(a.virtualHeight);
-      expect(b.posterizeLevels).toBeGreaterThanOrEqual(a.posterizeLevels);
-      expect(b.smooth).toBeGreaterThanOrEqual(a.smooth);
-      expect(b.bevel).toBeGreaterThanOrEqual(a.bevel);
-      expect(b.parallax).toBeGreaterThanOrEqual(a.parallax);
-      expect(b.bloom).toBeGreaterThanOrEqual(a.bloom);
-      expect(b.lighting).toBeGreaterThanOrEqual(a.lighting);
-      expect(b.dither).toBeLessThanOrEqual(a.dither);
-      expect(b.scanlines).toBeLessThanOrEqual(a.scanlines);
-      expect(b.mask).toBeLessThanOrEqual(a.mask);
-      expect(b.barrel).toBeLessThanOrEqual(a.barrel);
+      for (const k of ['virtualHeight', 'posterizeLevels', 'smooth', 'bevel', 'parallax', 'bloom', 'lighting', 'dof', 'fog', 'shadows', 'shafts', 'flare', 'dust', 'grade'] as const) {
+        expect(b[k], `${k} at ${i}`).toBeGreaterThanOrEqual(a[k]);
+      }
+      for (const k of ['dither', 'scanlines', 'mask', 'barrel', 'grain'] as const) {
+        expect(b[k], `${k} at ${i}`).toBeLessThanOrEqual(a[k]);
+      }
     }
   });
 
-  it('reaches a readable 360 lines within the first quarter of the ramp', () => {
-    expect(fidelityAt(FIDELITY_DURATION * 0.25).virtualHeight).toBeGreaterThanOrEqual(360);
+  it('reaches full resolution within the first third of the ramp', () => {
+    expect(fidelityAt(FIDELITY_DURATION / 3).virtualHeight).toBeGreaterThanOrEqual(1080);
   });
 
   it('passes through every era in order', () => {
@@ -81,7 +90,7 @@ describe('fidelityAt', () => {
     for (let i = 1; i < s.length; i++) {
       const a = s[i - 1], b = s[i];
       expect(Math.abs(a.virtualHeight - b.virtualHeight)).toBeLessThan(8);
-      for (const k of ['dither', 'scanlines', 'mask', 'smooth', 'bevel', 'parallax', 'bloom', 'lighting', 'saturation', 'contrast', 'vignette', 'grain', 'aberration'] as const) {
+      for (const k of ['dither', 'scanlines', 'mask', 'smooth', 'bevel', 'parallax', 'bloom', 'lighting', 'saturation', 'contrast', 'vignette', 'grain', 'aberration', 'dof', 'fog', 'shadows', 'shafts', 'flare', 'dust', 'grade'] as const) {
         expect(Math.abs(a[k] - b[k]), k).toBeLessThan(0.03);
       }
       expect(Math.abs(a.barrel - b.barrel)).toBeLessThan(0.005);
