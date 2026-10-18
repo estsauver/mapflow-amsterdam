@@ -5,11 +5,14 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useIsMobile } from '@/hooks/use-mobile';
-import FarmingGame from './FarmingGame';
-import EstimatorGame from './EstimatorGame';
-import SqlGame from './SqlGame';
-import SpotlightGame from './SpotlightGame';
-import StorybookGame from './StorybookGame';
+import BlackHoleScene from './BlackHoleScene';
+import ConsoleStage from '@/lib/console/ConsoleStage';
+import { createTestPattern } from '@/lib/console/testPattern';
+import { createFarmingGame } from '@/games/farming';
+import { createEstimatorGame } from '@/games/estimator';
+import { createSqlGame } from '@/games/sql';
+import { createSpotlightGame } from '@/games/spotlight';
+import { createStorybookGame } from '@/games/storybook';
 
 interface ProjectsDialogProps {
   open: boolean;
@@ -32,6 +35,14 @@ const PROJECTS: Project[] = [
     role: 'Founder, CTO (2015-2023)',
     description: 'Providing smallholder farmers in Africa with access to credit, high-quality seeds, fertilizer, and data-driven agronomic advice.',
     hasGame: true,
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic',
+    role: 'MTS (2026-present)',
+    description: "I can't say much about what I'm working on here.",
+    hasGame: true,
+    link: 'https://www.anthropic.com',
   },
   {
     id: 'universal-estimator',
@@ -78,6 +89,15 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
 
   const [currentProjectIndex, setCurrentProjectIndex] = useState(getInitialIndex);
   const currentProject = PROJECTS[currentProjectIndex];
+  // The game stage is heavy to mount (a WebGL2 context and its targets), so a burst
+  // of navigation only mounts the project the user settles on.
+  const [settledIndex, setSettledIndex] = useState(getInitialIndex);
+  useEffect(() => {
+    if (settledIndex === currentProjectIndex) return;
+    const id = window.setTimeout(() => setSettledIndex(currentProjectIndex), 200);
+    return () => window.clearTimeout(id);
+  }, [currentProjectIndex, settledIndex]);
+  const stageProject = PROJECTS[settledIndex];
   const isMobile = useIsMobile();
 
   // Sync state with URL when projectId changes
@@ -127,6 +147,10 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) {
+        if (e.key.startsWith('Arrow')) e.preventDefault();
+        return;
+      }
       if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         e.preventDefault();
         goToPrevProject();
@@ -140,33 +164,63 @@ const ProjectsDialog = ({ open, onOpenChange }: ProjectsDialogProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, goToPrevProject, goToNextProject]);
 
+  // Development aids: /projects/<id>?t=12 starts the fidelity ramp 12 s in;
+  // /projects/<id>?console=test shows the console test pattern instead of the game.
+  // /projects/<id>?gl=off exercises the no-WebGL fallbacks.
+  const devParams = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
+  const fidelityStartAt = Number(devParams?.get('t')) || 0;
+  const forceFallback = devParams?.get('gl') === 'off';
+
   const renderProjectGame = () => {
-    switch (currentProject.id) {
+    if (devParams?.get('console') === 'test') {
+      return <ConsoleStage key="console-test" program={createTestPattern} startAt={fidelityStartAt} forceFallback={forceFallback} />;
+    }
+    switch (stageProject.id) {
+      // Each game runs on the console stage, which renders it through the fidelity
+      // ramp. The key restarts the ramp when the project changes. Caps keep the
+      // text-heavy games legible and the light-themed storybook from blooming out.
       case 'apollo':
-        return <FarmingGame />;
+        return <ConsoleStage key="apollo" program={createFarmingGame} startAt={fidelityStartAt} forceFallback={forceFallback} />;
+      case 'anthropic':
+        return <BlackHoleScene forceFallback={forceFallback} />;
       case 'universal-estimator':
-        return <EstimatorGame />;
+        return <ConsoleStage key="universal-estimator" program={createEstimatorGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15, dust: 0.5 }} />;
       case 'nosql':
-        return <SqlGame />;
+        return <ConsoleStage key="nosql" program={createSqlGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.5, aberration: 0.15, dust: 0.5 }} />;
       case 'dspy':
-        return <SpotlightGame />;
+        return <ConsoleStage key="dspy" program={createSpotlightGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ lighting: 0.45, aberration: 0.12, dust: 0.4 }} />;
       case 'childrens':
-        return <StorybookGame />;
+        return <ConsoleStage key="childrens" program={createStorybookGame} startAt={fidelityStartAt} forceFallback={forceFallback} limits={{ bloom: 0.2, vignette: 0.2, lighting: 0.5 }} />;
       default:
-        // Coming soon placeholder for other projects
+        // Entries with hasGame but no game yet get a placeholder; entries without a game get a plain info panel.
         return (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">🚧</div>
-              <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
-                GAME COMING SOON
-              </h2>
-              <p className="text-slate-400 max-w-md" style={{ fontFamily: 'monospace' }}>
-                {currentProject.description}
+            <div className="text-center space-y-4 px-6">
+              {stageProject.hasGame ? (
+                <>
+                  <div className="text-6xl">🚧</div>
+                  <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
+                    GAME COMING SOON
+                  </h2>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-3xl font-bold text-white" style={{ fontFamily: 'monospace' }}>
+                    {stageProject.name}
+                  </h2>
+                  {stageProject.role && (
+                    <p className="text-sm text-slate-500" style={{ fontFamily: 'monospace' }}>
+                      {stageProject.role}
+                    </p>
+                  )}
+                </>
+              )}
+              <p className="text-slate-400 max-w-md mx-auto" style={{ fontFamily: 'monospace' }}>
+                {stageProject.description}
               </p>
-              {currentProject.link && (
+              {stageProject.link && (
                 <a
-                  href={currentProject.link}
+                  href={stageProject.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
